@@ -150,3 +150,11 @@ Fecha: 2026-10-13. Equipo: i7-9700F + RX 6600 8GB + 32GB. Usuario: hs-se (HS-GAM
 ## Cierre Issue 6 (2026-10-14) - Respaldo ETS2
 - Borrado OneDrive\Documentos\Euro Truck Simulator 2.syncbak (19MB, 12/10, obsoleto). Perfil activo en C:\Users\hs-se\Documents guarda bien (verificado 11:31 con juego en marcha). Junctions ATS/ETS2 OK. TERMINADO.
 
+
+## GitHub 2026-10-14 - v1.0 publicado
+- Repo creado: https://github.com/andresvillacrez/Ajazz-Truck-Simulator (publico). Rama main, 3 commits, tag v1.0. Identidad andresvillacrez@gmail.com.
+
+
+## Release v1.0 en GitHub
+- Release publicado: tag v1.0 + asset TruckerSim-Ajazz-Setup-1.0.exe (2.12 MB).
+
