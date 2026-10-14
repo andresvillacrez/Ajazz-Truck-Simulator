@@ -44,7 +44,7 @@ Name: "dll"; Description: "DLL de telemetria en ATS/ETS2"; Types: full; Flags: f
 ; --- Plugin a AppData ---
 Source: "..\plugins\{#PluginId}\backend.exe"; DestDir: "{userappdata}\HotSpot\StreamDock\plugins\{#PluginId}"; Components: plugin; Flags: ignoreversion
 Source: "..\plugins\{#PluginId}\manifest.json"; DestDir: "{userappdata}\HotSpot\StreamDock\plugins\{#PluginId}"; Components: plugin; Flags: ignoreversion
-Source: "..\plugins\{#PluginId}\*.png"; DestDir: "{userappdata}\HotSpot\StreamDock\plugins\{#PluginId}"; Components: plugin; Flags: ignoreversion skiptip
+Source: "..\plugins\{#PluginId}\*.png"; DestDir: "{userappdata}\HotSpot\StreamDock\plugins\{#PluginId}"; Components: plugin; Flags: ignoreversion
 Source: "..\plugins\{#PluginId}\propertyinspector\*"; DestDir: "{userappdata}\HotSpot\StreamDock\plugins\{#PluginId}\propertyinspector"; Components: plugin; Flags: ignoreversion recursesubdirs
 ; --- DLL a cada juego (carpetas elegidas en el asistente) ---
 Source: "..\dll\scs-telemetry.dll"; DestDir: "{code:GetATSDllDir}"; Components: dll; Flags: ignoreversion; Check: ShouldInstallATS
@@ -79,8 +79,8 @@ end;
 function ExtractVdfPaths(LibFile: String; Paths: TArrayOfString): TArrayOfString;
 var
   Lines: TArrayOfString;
-  I, P1, P2: Integer;
-  Line, Val: String;
+  I, P2: Integer;
+  Line, Rest, Val: String;
 begin
   Result := Paths;
   if not LoadStringsFromFile(LibFile, Lines) then Exit;
@@ -89,13 +89,14 @@ begin
     Line := Trim(Lines[I]);
     if Pos('"path"', Lowercase(Line)) = 1 then
     begin
-      P1 := Pos('"', Line, 7);
-      if P1 > 0 then
+      Rest := Trim(Copy(Line, 7, MaxInt));
+      if (Length(Rest) >= 2) and (Copy(Rest, 1, 1) = '"') then
       begin
-        P2 := Pos('"', Line, P1 + 1);
-        if P2 > P1 then
+        Delete(Rest, 1, 1);
+        P2 := Pos('"', Rest);
+        if P2 > 1 then
         begin
-          Val := NormalizePath(Copy(Line, P1 + 1, P2 - P1 - 1));
+          Val := NormalizePath(Copy(Rest, 1, P2 - 1));
           if (Val <> '') and DirExists(Val) then
           begin
             SetArrayLength(Result, GetArrayLength(Result) + 1);
@@ -111,9 +112,8 @@ function ManifestInstallDir(Lib, AppId: String): String;
 var
   Acf: String;
   Lines: TArrayOfString;
-  I: Integer;
-  Line, Lower: String;
-  P1, P2: Integer;
+  I, P2: Integer;
+  Line, Lower, Rest: String;
 begin
   Result := '';
   Acf := Lib + '\steamapps\appmanifest_' + AppId + '.acf';
@@ -124,12 +124,13 @@ begin
     Lower := Lowercase(Line);
     if Pos('"installdir"', Lower) = 1 then
     begin
-      P1 := Pos('"', Line, 13);
-      if P1 > 0 then
+      Rest := Trim(Copy(Line, 13, MaxInt));
+      if (Length(Rest) >= 2) and (Copy(Rest, 1, 1) = '"') then
       begin
-        P2 := Pos('"', Line, P1 + 1);
-        if P2 > P1 then
-          Result := Copy(Line, P1 + 1, P2 - P1 - 1);
+        Delete(Rest, 1, 1);
+        P2 := Pos('"', Rest);
+        if P2 > 1 then
+          Result := Copy(Rest, 1, P2 - 1);
       end;
       Break;
     end;
