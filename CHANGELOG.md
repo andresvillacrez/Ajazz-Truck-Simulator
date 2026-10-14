@@ -1,6 +1,14 @@
 # CHANGELOG
 
-## [Sin versionar]
+## [1.0] - 2026-10-14
+
+Primera version publica ("Ajazz Truck Simulator").
+- Instalador Inno Setup con deteccion Steam + carpeta manual + desinstalador.
+- Property Inspector en espanol.
+- Docs (instalacion, compatibilidad, desarrollo) + imagenes con datos en vivo.
+- Repo git solo-fuentes.
+
+## Historial interno (previo a 1.0)
 
 - Instalador Inno Setup con deteccion Steam + carpeta manual (`installer/`).
 - Property Inspector unificado en espanol.

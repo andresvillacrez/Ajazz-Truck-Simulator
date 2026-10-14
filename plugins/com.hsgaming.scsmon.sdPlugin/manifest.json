@@ -176,7 +176,7 @@
   "Description": "Telemetria ATS/ETS2 en el Ajazz (velocidad, marchas, combustible, luces...)",
   "Icon": "icon",
   "Name": "Trucker Simulator",
-  "Version": "3.0",
+  "Version": "1.0",
   "SDKVersion": 2,
   "OS": [{ "Platform": "windows", "MinimumVersion": "10" }]
 }
