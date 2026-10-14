@@ -1,0 +1,182 @@
+{
+  "Actions": [
+    {
+      "Name": "Velocidad",
+      "UUID": "com.hsgaming.scsmon.speed",
+      "Icon": "tile-speed",
+      "States": [{ "Image": "tile-speed", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Marcha (cambio)",
+      "UUID": "com.hsgaming.scsmon.gear",
+      "Icon": "tile-gear",
+      "States": [{ "Image": "tile-gear", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "RPM (cambio de marcha)",
+      "UUID": "com.hsgaming.scsmon.rpm",
+      "Icon": "tile-rpm",
+      "States": [{ "Image": "tile-rpm", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Combustible (nivel)",
+      "UUID": "com.hsgaming.scsmon.fuel",
+      "Icon": "tile-fuel",
+      "States": [{ "Image": "tile-fuel", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Consumo (L/100km)",
+      "UUID": "com.hsgaming.scsmon.cons",
+      "Icon": "tile-cons",
+      "States": [{ "Image": "tile-cons", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Crucero (velocidad)",
+      "UUID": "com.hsgaming.scsmon.cruise",
+      "Icon": "pk-cruise",
+      "States": [{ "Image": "pk-cruise", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Limite de via",
+      "UUID": "com.hsgaming.scsmon.limit",
+      "Icon": "tile-limit",
+      "States": [{ "Image": "tile-limit", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Temperatura del camion",
+      "UUID": "com.hsgaming.scsmon.watertemp",
+      "Icon": "tile-temp",
+      "States": [{ "Image": "tile-temp", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Temperatura del aceite",
+      "UUID": "com.hsgaming.scsmon.oiltemp",
+      "Icon": "tile-oil",
+      "States": [{ "Image": "tile-oil", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Presion del aire",
+      "UUID": "com.hsgaming.scsmon.airpressure",
+      "Icon": "tile-air",
+      "States": [{ "Image": "tile-air", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Bloqueo del diferencial",
+      "UUID": "com.hsgaming.scsmon.difflock",
+      "Icon": "pk-diff",
+      "States": [{ "Image": "pk-diff", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Freno de emergencia",
+      "UUID": "com.hsgaming.scsmon.emergencybrake",
+      "Icon": "pk-emergency-brake",
+      "States": [{ "Image": "pk-emergency-brake", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Estacionarias",
+      "UUID": "com.hsgaming.scsmon.hazbtn",
+      "Icon": "pk-hazard",
+      "States": [{ "Image": "pk-hazard", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Intermitente izquierda (boton)",
+      "UUID": "com.hsgaming.scsmon.blinkLbtn",
+      "Icon": "pk-left",
+      "States": [{ "Image": "pk-left", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Intermitente derecha (boton)",
+      "UUID": "com.hsgaming.scsmon.blinkRbtn",
+      "Icon": "pk-right",
+      "States": [{ "Image": "pk-right", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Luces (boton)",
+      "UUID": "com.hsgaming.scsmon.lightbtn",
+      "Icon": "pk-low",
+      "States": [{ "Image": "pk-low", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Largas (boton)",
+      "UUID": "com.hsgaming.scsmon.highbtn",
+      "Icon": "pk-high",
+      "States": [{ "Image": "pk-high", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Baliza (boton)",
+      "UUID": "com.hsgaming.scsmon.beaconbtn",
+      "Icon": "pk-beacon",
+      "States": [{ "Image": "pk-beacon", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Limpiaparabrisas (boton)",
+      "UUID": "com.hsgaming.scsmon.wiperbtn",
+      "Icon": "pk-wiper",
+      "States": [{ "Image": "pk-wiper", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Danos (camion/trailer/carga)",
+      "UUID": "com.hsgaming.scsmon.damage",
+      "Icon": "tile-damage",
+      "States": [{ "Image": "tile-damage", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Ruta (recorrida/faltante)",
+      "UUID": "com.hsgaming.scsmon.route",
+      "Icon": "tile-route",
+      "States": [{ "Image": "tile-route", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad"],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    }
+  ],
+  "Author": "HS-Gaming",
+  "CodePath": "backend.exe",
+  "Category": "Trucker Simulator",
+  "CategoryIcon": "icon",
+  "Description": "Telemetria ATS/ETS2 en el Ajazz (velocidad, marchas, combustible, luces...)",
+  "Icon": "icon",
+  "Name": "Trucker Simulator",
+  "Version": "3.0",
+  "SDKVersion": 2,
+  "OS": [{ "Platform": "windows", "MinimumVersion": "10" }]
+}

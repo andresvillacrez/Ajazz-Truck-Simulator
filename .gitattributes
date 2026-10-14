@@ -1,0 +1,6 @@
+* text=auto
+*.png binary
+*.ico binary
+*.ttf binary
+*.sdb binary
+*.jfm binary

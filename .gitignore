@@ -1,0 +1,25 @@
+# Binarios compilados (se generan localmente, ver docs/DESARROLLO.md)
+*.exe
+
+# DLL de telemetria de terceros (RenCloud, con licencia propia).
+# Descargar segun docs/DESARROLLO.md y colocarla en dll/ antes de compilar el instalador.
+*.dll
+
+# Logs y temporales
+*.log
+*.tmp
+*.bak
+*.syncbak
+
+# Respaldo del pack de iconos de terceros (solo copia local, no distribuir)
+iconos/
+
+# Backups de red/sistema de la maquina (no forman parte del proyecto)
+network-backup/
+guest-*.log
+setup-share.log
+
+# Salida del instalador y temporales de docs
+installer/Output/
+Thumbs.db
+Desktop.ini

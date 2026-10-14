@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<script src="pi.js"></script>
+</head>
+<body style="background:#111;color:#fff;font-family:sans-serif;padding:10px;">
+<h3>HS SCS Monitor</h3>
+<label>Metric</label><br>
+<select id="metric">
+<option value="speed">Velocidad</option>
+<option value="gear">Marcha</option>
+<option value="rpm">RPM</option>
+<option value="fuel">Combustible</option>
+<option value="range">Autonomia</option>
+<option value="cons">Consumo</option>
+<option value="cruise">Crucero</option>
+<option value="limit">Limite de via</option>
+<option value="blinkL">Intermitente izq.</option>
+<option value="blinkR">Intermitente der.</option>
+<option value="hazard">Parqueo / emergencia</option>
+<option value="lowB">Cortas</option>
+<option value="highB">Largas</option>
+<option value="brake">Freno</option>
+<option value="park">Posicion</option>
+<option value="lights">Luces (resumen)</option>
+<option value="auto">Testigo auto (luz activa)</option>
+<option value="turn">Intermitentes (izq/der/parqueo)</option>
+<option value="beams">Luces (posicion/corta/larga)</option>
+<option value="damage">Daños (camion/trailer/carga)</option>
+<option value="route">Ruta (recorrida/faltante)</option>
+</select><br><br>
+<label>Theme</label><br>
+<select id="theme">
+<option value="green">Green</option>
+<option value="cyan">Cyan</option>
+<option value="amber">Amber</option>
+<option value="red">Red</option>
+<option value="white">White</option>
+<option value="yellow">Yellow</option>
+<option value="blue">Blue</option>
+<option value="purple">Purple</option>
+<option value="pink">Pink</option>
+</select><br><br>
+<label>Interval (sec)</label><br>
+<input type="number" id="interval" value="0.15" min="0.1" max="60" step="0.05"><br><br>
+</body>
+</html>
