@@ -24,6 +24,9 @@ Fecha: 2026-10-13. Equipo: i7-9700F + RX 6600 8GB + 32GB. Usuario: hs-se (HS-GAM
   routeT=1064f(segundos de juego), onJob=4300b, odometro=1056f,
   wears camion=1036..1052f, trailer0: attached=6080b, cargoDmg=6152f, chasis=6156f,
   ruedas=6160f, carroceria=6164f, jobCargoDmg=1468f.
+- Correccion 2026-10-27: `motor` (1567) es **motorBrake** (freno motor), no el
+  motor encendido; el encendido real es `engineEnabled` (1576). La presion de
+  aire (992) esta en **PSI** (rango real ~120-145), no en bar.
 - OJO off-by-one hist√≥rico: hazard es 1588 (1587 es reversa). Ya corregido en backend.cs.
 - routeD viene en METROS (dividir /1000). routeT en segundos de juego.
 - Acciones (22): monitor, speed(km/h siempre), gear, rpm(zonas 60/75/90% + CAMBIA),
@@ -34,7 +37,7 @@ Fecha: 2026-10-13. Equipo: i7-9700F + RX 6600 8GB + 32GB. Usuario: hs-se (HS-GAM
   highbtn(manda K), beaconbtn(manda O, pulso 1 s).
   Contar UUID reales en manifest.json (esta lista puede variar).
 - Botones (keyDown): F=0x46 hazard, L=0x4C luces, K=0x4B largas, O=0x4F baliza (VK),
-  `[`/`]` por SCAN CODE 0x1A/0x1B (el layout espa√±ol rompe VK OEM).
+  `[`/`]` por scan 0x1A/0x1B + VK (VK+scan; el layout espa√±ol rompe el VK OEM puro).
   Estructura INPUT x64 = 40 bytes (¬°24 falla!). El juego debe estar enfocado.
 - Hazard debe estar asignado a F en Opciones‚ÜíTeclas (estaba sin asignar).
   L, K, O, `[`, `]` vienen asignados por defecto.
@@ -93,29 +96,29 @@ Fecha: 2026-10-13. Equipo: i7-9700F + RX 6600 8GB + 32GB. Usuario: hs-se (HS-GAM
 - Modelo anterior: Muse Spark (finito). Migraci√≥n a omniroute/OpenCode en curso.
 - Para retomar: este backup + pegar este historial en la nueva sesi√≥n.
 
-## ActualizaciÛn 2026-10-13 (continuaciÛn de sesiÛn)
+## ActualizaciÔøΩn 2026-10-13 (continuaciÔøΩn de sesiÔøΩn)
 
 ### Plugin Trucker Simulator
 - Backend nativo `backend.exe` en C# con fuente `backend.cs`; compilado localmente con Framework csc.
 - Se copiaron a la carpeta de proyecto `plugins\com.hsgaming.scsmon.sdPlugin` y el pack ETS2 `iconos\jp.tsuteto.ets2.sdIconPack`.
-- Se aÒadieron acciones: limpiaparabrisas, bloqueo diferencial, freno emergencia y gauge de temperatura de motor/aceite y presiÛn de aire.
-- Eliminadas acciones `Monitor libre`, `Crucero velocidad y tolerancia`, `AutonomÌa km`.
-- Varios iconos tile rediseÒados; velocidad velocÌmetro, RPM con marcha/CAMBIA, combustible surtidor+barra, daÒos y ruta con iconos, crucero con n˙mero/set y testigo estado, lÌmite en cÌrculo que pulsa naranja/rojo al exceder.
+- Se aÔøΩadieron acciones: limpiaparabrisas, bloqueo diferencial, freno emergencia y gauge de temperatura de motor/aceite y presiÔøΩn de aire.
+- Eliminadas acciones `Monitor libre`, `Crucero velocidad y tolerancia`, `AutonomÔøΩa km`.
+- Varios iconos tile rediseÔøΩados; velocidad velocÔøΩmetro, RPM con marcha/CAMBIA, combustible surtidor+barra, daÔøΩos y ruta con iconos, crucero con nÔøΩmero/set y testigo estado, lÔøΩmite en cÔøΩrculo que pulsa naranja/rojo al exceder.
 - Botones probados: emergencia Space, turn left/right SCAN 1A/1B, luces L, largas K, baliza O, limpiaparabrisas P (ciclo local OFF/A/2/3; game telemetry solo publica on/off), diferencial V. Input SendInput struct debe ser 40 bytes (explicit layout x64).
-- Baliza usa O y pulso. Intermitentes de emergencia F; altas: vigilante muestrea offset 1584 pero el juego no mostrÛ destellos al hacer r·fagas en algunas pruebas. Requiere retomar test.
-- Freno emergencia: icono original `emergency-brake.png`, blanco apagado / pulso rojo activo; botÛn Space.
+- Baliza usa O y pulso. Intermitentes de emergencia F; altas: vigilante muestrea offset 1584 pero el juego no mostrÔøΩ destellos al hacer rÔøΩfagas en algunas pruebas. Requiere retomar test.
+- Freno emergencia: icono original `emergency-brake.png`, blanco apagado / pulso rojo activo; botÔøΩn Space.
 - Route: planned km offset 100, routeD metros offset1060, routeT segundos juego offset1064; recorrido=planned-routeD/1000. ETA. Numerales separados, recorrido verde y faltante cyan.
-- Crucero: `cruise` button manda C, icono control crucero con n˙mero set verde siempre visible; icono 80% transparencia y texto CRUCERO. BotÛn muestra testigo verde pulsante cuando CC on. Velocidad set se convierte m/s*3.6, como el dump ETS2 comprobado (14.31 m/s ~= 52 km/h).
-- Nuevo render `cruiseSpeed` se conservÛ en backend pero la acciÛn fue retirada del manifest por el usuario.
+- Crucero: `cruise` button manda C, icono control crucero con nÔøΩmero set verde siempre visible; icono 80% transparencia y texto CRUCERO. BotÔøΩn muestra testigo verde pulsante cuando CC on. Velocidad set se convierte m/s*3.6, como el dump ETS2 comprobado (14.31 m/s ~= 52 km/h).
+- Nuevo render `cruiseSpeed` se conservÔøΩ en backend pero la acciÔøΩn fue retirada del manifest por el usuario.
 - Nuevos gauges: water temp offset1024, oil temp offset1020, aire 992; warning water threshold offset732, air warning 720/emergency724. Aceite rojo >=130C porque SDK no publica threshold aceite.
-- Tile ruta/daÒo recreados con make-icons.ps1. Pack de iconos del Ajazz ya respaldado en `iconos`.
-- ⁄ltima acciÛn de usuario: ìactualiza la carpeta del proyectoî; copia completada; verificar/actualizar este historial despuÈs de cambios futuros.
+- Tile ruta/daÔøΩo recreados con make-icons.ps1. Pack de iconos del Ajazz ya respaldado en `iconos`.
+- ÔøΩltima acciÔøΩn de usuario: ÔøΩactualiza la carpeta del proyectoÔøΩ; copia completada; verificar/actualizar este historial despuÔøΩs de cambios futuros.
 
-## Fix 2026-10-14 ó auto-detecciÛn de ATS/ETS2 tras iniciar el plugin antes del juego
-- SÌntoma: Stream Dock/backend arrancaban al iniciar sesiÛn y se quedaban con MMF Local\SCSTelemetry null si el juego todavÌa no habÌa abierto; no reconectaban.
-- Fix en `plugins\com.hsgaming.scsmon.sdPlugin\backend.cs`: backend sondea y abre MMF cada 1 s cuando no hay snapshot activo; si el juego cierra / el SDK deja de estar activo, libera accessor y MMF, entra en espera y vuelve a detectar el siguiente arranque. El hilo FlashWatch tambiÈn espera y se conecta/reconecta independientemente.
+## Fix 2026-10-14 ÔøΩ auto-detecciÔøΩn de ATS/ETS2 tras iniciar el plugin antes del juego
+- SÔøΩntoma: Stream Dock/backend arrancaban al iniciar sesiÔøΩn y se quedaban con MMF Local\SCSTelemetry null si el juego todavÔøΩa no habÔøΩa abierto; no reconectaban.
+- Fix en `plugins\com.hsgaming.scsmon.sdPlugin\backend.cs`: backend sondea y abre MMF cada 1 s cuando no hay snapshot activo; si el juego cierra / el SDK deja de estar activo, libera accessor y MMF, entra en espera y vuelve a detectar el siguiente arranque. El hilo FlashWatch tambiÔøΩn espera y se conecta/reconecta independientemente.
 - Compilado y desplegado a AppData + backup `E:\Proyectos de software\Plugin ATS - ETS Ajazz\plugins\com.hsgaming.scsmon.sdPlugin\backend.exe` (hash iguales).
-- Verificado 14-oct: `backend.exe` vivo; log `mapa Local\SCSTelemetry conectado`; ETS2 log confirma carga de scs-telemetry.dll; MMF sdkActive=1 y pause=1 (estar en pausa solo congela cambios, no es fallo de detecciÛn).
+- Verificado 14-oct: `backend.exe` vivo; log `mapa Local\SCSTelemetry conectado`; ETS2 log confirma carga de scs-telemetry.dll; MMF sdkActive=1 y pause=1 (estar en pausa solo congela cambios, no es fallo de detecciÔøΩn).
 
 ## Fix 2026-10-14 (2) - falso positivo rafaga + diagnostico
 - Sintoma: log mostraba 'rafaga detectada' ~20ms despues de inicio, ANTES de mapa conectado. Causa: FlashWatch leia O_HI=1584 sin comprobar O_SDK=0; MMF retenia basura de sesion anterior.
@@ -157,4 +160,92 @@ Fecha: 2026-10-13. Equipo: i7-9700F + RX 6600 8GB + 32GB. Usuario: hs-se (HS-GAM
 
 ## Release v1.0 en GitHub
 - Release publicado: tag v1.0 + asset TruckerSim-Ajazz-Setup-1.0.exe (2.12 MB).
+
+
+## Actualizacion 2026-10-27 - P0/P1/P2
+- P0 correctitud: presion de aire en PSI, estado real del motor (`motorBrake`
+  vs `engineEnabled`), `checkengine` con desgaste >= 5 %, freno de
+  estacionamiento real, ventanillas por VK+scan con bindings automaticos,
+  `StringFormat` compartido
+  y limpieza de contextos en `willDisappear`.
+- P1 rendimiento: render bajo demanda por clave de estado e iconos
+  preescalados/tiles cacheados. CPU con el juego pausado: 7,71 % -> ~1 %.
+- P2 visualizacion: barra de RPM, gauges con anillo, ruta/danos jerarquizados,
+  crucero con contraste y pulso unificado por severidad. Medido: 0,97 % de un
+  nucleo y 40,9 MB con 26 contextos activos en dos dispositivos.
+- Desplegado SHA256 `CD611A4F6A4C29DC9515F1E65574AA6C7DFEBCECB2CB8BC8A9682481CFA89F35`,
+  backend PID `21144`, sin errores en `backend.log`.
+
+## Ventanillas automaticas 2026-10-27
+
+- Objetivo: subir/bajar ventanillas sin asignar teclas a mano, conservando
+  toque = subir y mantener = bajar.
+- Perfil activo de cada juego: ultimo `New profile selected:` /
+  `Set profile finished:` de `game.log.txt`; nombre -> hex
+  (`gamercofla` -> `67616D6572636F666C61`).
+- `EnsureWindowBindings` / `-WindowsFix` agregan solo `lwin*`/`rwin*` sin tecla,
+  crean `controls.sii.hs-window-backup` y no tocan bindings existentes. No se
+  parchea con el juego abierto; `WindowBindingWatch` reintenta cada 15 s.
+- Perfil ETS2 parcheado (game cerrado, backup 43482 bytes):
+  - `lwinclose` = `modifier(no_modifier, keyboard.f8?0)`
+  - `lwinopen` = `modifier(alt_only, keyboard.f8?0)`
+  - `rwinclose` = `modifier(alt_only, keyboard.comma?0)`
+  - `rwinopen` = `modifier(alt_only, keyboard.minus?0)`
+  - ATS sin cambios: `slash`/`period`/`apostrophe`/`semicolon`.
+- Causa raiz de "ninguna funciono": ETS2 ignora `SendInput` con
+  `KEYEVENTF_SCANCODE` puro. `SendScan` ahora calcula VK con `MapVirtualKey` y
+  envia VK+scan (probado con luz de cruce: `PressScan 0x26` la alterna).
+- Las acciones de ventanilla son "mientras se mantiene": `PressScanHold`
+  mantiene la tecla principal 1,4 s en un hilo aparte (Alt se suelta a los
+  ~100 ms; el juego ya engancho la accion). Toque <400 ms sube; mantener baja.
+- Validado por inyeccion directa con capturas y con los **botones fisicos**
+  del StreamDock el 27/10/2026: izquierda y derecha abren y cierran, toque y
+  mantener, sin efectos laterales reportados. `backend.log` confirma
+  `mantenida 1400ms` con foco `eurotrucks2`.
+- Desplegado SHA256 `2CEB60CADD276DE07DC0926C94E8FC1F841C869A70994975C1C39D21EBF610C8`,
+  backend PID `22084`, StreamDock PID `7764`, ~44,7 MB. `backend.log` confirma
+  perfil activo ETS2 y los cuatro bindings.
+
+## Validacion checkengine 2026-10-27
+
+- Arn√©s de reflexi√≥n sobre el build desplegado: se crea `SCSMon+Snap`
+  sint√©tico y se invoca el render privado `RenderCheckEngine`; el PNG se
+  inspecciona p√≠xel a p√≠xel.
+- Resultados:
+  - `active=true`, `engine=true`, desgaste 4,0 % -> PNG negro (261 bytes,
+    0 px no negros).
+  - desgaste 5,0 % y 6,0 % -> `CHECK ENGINE` rojo (1017 bytes, 1001 px no
+    negros).
+  - motor apagado, `active=false` o `engineWear=null` -> PNG negro.
+- Confirma el umbral >= 5 % de la app Windows, sin falsos positivos por
+  combustible, temperatura o aire. Evidencia en
+  `%TEMP%\opencode\checkengine-*.png`.
+
+## Validacion sintetica de tiles 2026-10-27
+
+- Sobre el build `2CEB60...` se crearon `Snap` sint√©ticos y se invoc√≥ el
+  render privado `RenderKey`/`RenderCheckEngine`, guardando PNGs en
+  `%TEMP%\opencode\syn-*.png` y `checkengine-*.png`.
+- Casos cubiertos: ruta 350/451 y sin viaje; da√±os 9/2/1 y 100/60/21;
+  crucero `OK`/`FUERA`/`OFF`/sin velocidad; l√≠mite 80/90/sin l√≠mite; RPM
+  1500 (naranja) y 1850 (`CAMBIA` rojo); gauges de agua, aceite y aire en
+  normal y aviso; `checkengine` 4/5/6 %.
+- Todos los tiles son legibles y no se recortan; no se requirieron cambios de
+  c√≥digo. La validaci√≥n en vivo se confirm√≥ en la secci√≥n siguiente.
+
+## Medicion en conduccion 2026-10-27
+
+- ETS2 en marcha, 36 muestras cada 5 s (180 s): CPU del backend 1,438 s =
+  **0,80 % de un n√∫cleo**; working set medio 46,3 MB (m√°ximo 46,5 MB).
+- Telemetr√≠a observada: velocidad 49,0-116,7 km/h, RPM 1.086-1.918, crucero
+  activo en 6/36 muestras (68 km/h fijados).
+- Nota de diagn√≥stico: el primer sampler ley√≥ `gear` con `ReadSingle` y mostr√≥
+  0; el backend usa `ReadInt32` (como corresponde) y el juego marcaba 14. No es
+  un bug del plugin. Confirmado tambi√©n `gearDash=14`.
+- Sin errores `render:`/`ev-err:` en `backend.log` durante la prueba. Con este
+  consumo, P1.3-P1.5 siguen en backlog sin urgencia.
+- Confirmado por el usuario en el dispositivo f√≠sico: RPM/marcha,
+  veloc√≠metro/gauges, ruta/da√±os, l√≠mite 80 en alerta, crucero `OK`/`FUERA`,
+  motor, PSI y freno de estacionamiento. Con esto quedan cerrados P0,
+  P1.1-P1.2 y P2; solo quedan P3 y el backlog marginal P1.3-P1.5.
 

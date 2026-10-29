@@ -5,7 +5,7 @@
       "UUID": "com.hsgaming.scsmon.speed",
       "Icon": "tile-speed",
       "States": [{ "Image": "tile-speed", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
@@ -13,7 +13,7 @@
       "UUID": "com.hsgaming.scsmon.gear",
       "Icon": "tile-gear",
       "States": [{ "Image": "tile-gear", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
@@ -21,7 +21,7 @@
       "UUID": "com.hsgaming.scsmon.rpm",
       "Icon": "tile-rpm",
       "States": [{ "Image": "tile-rpm", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
@@ -29,7 +29,7 @@
       "UUID": "com.hsgaming.scsmon.fuel",
       "Icon": "tile-fuel",
       "States": [{ "Image": "tile-fuel", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
@@ -37,7 +37,7 @@
       "UUID": "com.hsgaming.scsmon.cons",
       "Icon": "tile-cons",
       "States": [{ "Image": "tile-cons", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
@@ -45,7 +45,7 @@
       "UUID": "com.hsgaming.scsmon.cruise",
       "Icon": "pk-cruise",
       "States": [{ "Image": "pk-cruise", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
@@ -53,7 +53,7 @@
       "UUID": "com.hsgaming.scsmon.limit",
       "Icon": "tile-limit",
       "States": [{ "Image": "tile-limit", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
@@ -61,7 +61,7 @@
       "UUID": "com.hsgaming.scsmon.watertemp",
       "Icon": "tile-temp",
       "States": [{ "Image": "tile-temp", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
@@ -69,7 +69,7 @@
       "UUID": "com.hsgaming.scsmon.oiltemp",
       "Icon": "tile-oil",
       "States": [{ "Image": "tile-oil", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
@@ -77,7 +77,7 @@
       "UUID": "com.hsgaming.scsmon.airpressure",
       "Icon": "tile-air",
       "States": [{ "Image": "tile-air", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
@@ -85,15 +85,15 @@
       "UUID": "com.hsgaming.scsmon.difflock",
       "Icon": "pk-diff",
       "States": [{ "Image": "pk-diff", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/lights.html"
     },
     {
-      "Name": "Freno de emergencia",
+      "Name": "Freno de estacionamiento (boton)",
       "UUID": "com.hsgaming.scsmon.emergencybrake",
-      "Icon": "pk-emergency-brake",
-      "States": [{ "Image": "pk-emergency-brake", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Icon": "pk-parking-brake-1",
+      "States": [{ "Image": "pk-parking-brake-1", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/lights.html"
     },
     {
@@ -101,7 +101,7 @@
       "UUID": "com.hsgaming.scsmon.hazbtn",
       "Icon": "pk-hazard",
       "States": [{ "Image": "pk-hazard", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/lights.html"
     },
     {
@@ -109,7 +109,7 @@
       "UUID": "com.hsgaming.scsmon.blinkLbtn",
       "Icon": "pk-left",
       "States": [{ "Image": "pk-left", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/lights.html"
     },
     {
@@ -117,7 +117,7 @@
       "UUID": "com.hsgaming.scsmon.blinkRbtn",
       "Icon": "pk-right",
       "States": [{ "Image": "pk-right", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/lights.html"
     },
     {
@@ -125,7 +125,7 @@
       "UUID": "com.hsgaming.scsmon.lightbtn",
       "Icon": "pk-low",
       "States": [{ "Image": "pk-low", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/lights.html"
     },
     {
@@ -133,7 +133,7 @@
       "UUID": "com.hsgaming.scsmon.highbtn",
       "Icon": "pk-high",
       "States": [{ "Image": "pk-high", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/lights.html"
     },
     {
@@ -141,7 +141,7 @@
       "UUID": "com.hsgaming.scsmon.beaconbtn",
       "Icon": "pk-beacon",
       "States": [{ "Image": "pk-beacon", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/lights.html"
     },
     {
@@ -149,7 +149,7 @@
       "UUID": "com.hsgaming.scsmon.wiperbtn",
       "Icon": "pk-wiper",
       "States": [{ "Image": "pk-wiper", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/lights.html"
     },
     {
@@ -157,7 +157,7 @@
       "UUID": "com.hsgaming.scsmon.damage",
       "Icon": "tile-damage",
       "States": [{ "Image": "tile-damage", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/lights.html"
     },
     {
@@ -165,12 +165,101 @@
       "UUID": "com.hsgaming.scsmon.route",
       "Icon": "tile-route",
       "States": [{ "Image": "tile-route", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad"],
+      "Controllers": ["Keypad", "Information"],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Autonomia (combustible)",
+      "UUID": "com.hsgaming.scsmon.range",
+      "Icon": "tile-fuel",
+      "States": [{ "Image": "tile-fuel", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad", "Information"],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Estado del motor",
+      "UUID": "com.hsgaming.scsmon.engine",
+      "Icon": "pk-engine",
+      "States": [{ "Image": "pk-engine", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad", "Information"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Freno de estacionamiento (testigo)",
+      "UUID": "com.hsgaming.scsmon.park",
+      "Icon": "pk-parking-brake-1",
+      "States": [{ "Image": "pk-parking-brake-1", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad", "Information"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Acople del trailer",
+      "UUID": "com.hsgaming.scsmon.trailerattach",
+      "Icon": "pk-coupling",
+      "States": [{ "Image": "pk-coupling", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad", "Information"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Ventanilla izquierda",
+      "UUID": "com.hsgaming.scsmon.windowleft",
+      "Icon": "pk-window-left-down",
+      "States": [{ "Image": "pk-window-left-down", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad", "Information"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Ventanilla derecha",
+      "UUID": "com.hsgaming.scsmon.windowright",
+      "Icon": "pk-window-right-down",
+      "States": [{ "Image": "pk-window-right-down", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad", "Information"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Check Engine",
+      "UUID": "com.hsgaming.scsmon.checkengine",
+      "Icon": "tile-temp",
+      "States": [{ "Image": "tile-temp", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad", "Information"],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Autonomia (Motor encendido)",
+      "UUID": "com.hsgaming.scsmon.enginerange",
+      "Icon": "tile-fuel",
+      "States": [{ "Image": "tile-fuel", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad", "Information"],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Marcha (Motor encendido)",
+      "UUID": "com.hsgaming.scsmon.enginegear",
+      "Icon": "tile-gear",
+      "States": [{ "Image": "tile-gear", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad", "Information"],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Encendido / Apagado motor",
+      "UUID": "com.hsgaming.scsmon.enginebtn",
+      "Icon": "pk-engine",
+      "States": [{ "Image": "pk-engine", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad", "Information"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Radio del juego",
+      "UUID": "com.hsgaming.scsmon.radiobtn",
+      "Icon": "pk-radio",
+      "States": [{ "Image": "pk-radio", "TitleAlignment": "bottom" }],
+      "Controllers": ["Keypad", "Information"],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
     }
   ],
   "Author": "HS-Gaming",
   "CodePath": "backend.exe",
+  "CodePathMac": "backend",
   "Category": "Trucker Simulator",
   "CategoryIcon": "icon",
   "Description": "Telemetria ATS/ETS2 en el Ajazz (velocidad, marchas, combustible, luces...)",
@@ -178,5 +267,8 @@
   "Name": "Trucker Simulator",
   "Version": "1.0",
   "SDKVersion": 2,
-  "OS": [{ "Platform": "windows", "MinimumVersion": "10" }]
+  "OS": [
+    { "Platform": "windows", "MinimumVersion": "10" },
+    { "Platform": "mac", "MinimumVersion": "10.13" }
+  ]
 }
