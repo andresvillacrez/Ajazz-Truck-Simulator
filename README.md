@@ -23,7 +23,7 @@ estacionarias, baliza, limpiaparabrisas, diferencial, freno, crucero).
 
 ## Caracteristicas
 
-**Windows 1.3.0** define 34 acciones (se eliminan 5 testigos redundantes y se
+**Windows 1.3.1** define 34 acciones (se eliminan 5 testigos redundantes y se
 rediseñan combustible, autonomía y ruta). **Trucker Simulator Testigos** es un
 plugin separado con 12 testigos de solo lectura. **macOS** es una beta con las
 21 acciones
