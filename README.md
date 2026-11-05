@@ -4,6 +4,8 @@
 
 # Trucker Simulator para Ajazz StreamDock
 
+> **Descarga el instalador Windows** (v1.3.2): [TruckerSim-Ajazz-Setup-1.3.2.exe](https://github.com/andresvillacrez/Ajazz-Truck-Simulator/releases/download/v1.3.2/TruckerSim-Ajazz-Setup-1.3.2.exe) — ver todas las versiones en [Releases](https://github.com/andresvillacrez/Ajazz-Truck-Simulator/releases).
+
 Plugin **Trucker Simulator** (`com.hsgaming.scsmon`): telemetria en vivo de
 **American Truck Simulator** y **Euro Truck Simulator 2** en controladoras
 Ajazz / StreamDock (AKP153R/E probado; AKP05, AKP03 y demas compatibles â€”
