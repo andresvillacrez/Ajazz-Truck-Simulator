@@ -1,260 +1,569 @@
 {
   "Actions": [
     {
-      "Name": "Velocidad",
-      "UUID": "com.hsgaming.scsmon.speed",
-      "Icon": "tile-speed",
-      "States": [{ "Image": "tile-speed", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/fixed.html"
-    },
-    {
-      "Name": "Marcha (cambio)",
-      "UUID": "com.hsgaming.scsmon.gear",
-      "Icon": "tile-gear",
-      "States": [{ "Image": "tile-gear", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/fixed.html"
-    },
-    {
-      "Name": "RPM (cambio de marcha)",
-      "UUID": "com.hsgaming.scsmon.rpm",
-      "Icon": "tile-rpm",
-      "States": [{ "Image": "tile-rpm", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/fixed.html"
-    },
-    {
-      "Name": "Combustible (nivel)",
-      "UUID": "com.hsgaming.scsmon.fuel",
-      "Icon": "tile-fuel",
-      "States": [{ "Image": "tile-fuel", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/fixed.html"
-    },
-    {
-      "Name": "Consumo (L/100km)",
-      "UUID": "com.hsgaming.scsmon.cons",
-      "Icon": "tile-cons",
-      "States": [{ "Image": "tile-cons", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/fixed.html"
-    },
-    {
-      "Name": "Crucero (velocidad)",
-      "UUID": "com.hsgaming.scsmon.cruise",
-      "Icon": "pk-cruise",
-      "States": [{ "Image": "pk-cruise", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/fixed.html"
-    },
-    {
-      "Name": "Limite de via",
-      "UUID": "com.hsgaming.scsmon.limit",
-      "Icon": "tile-limit",
-      "States": [{ "Image": "tile-limit", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/fixed.html"
-    },
-    {
-      "Name": "Temperatura del camion",
-      "UUID": "com.hsgaming.scsmon.watertemp",
-      "Icon": "tile-temp",
-      "States": [{ "Image": "tile-temp", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/fixed.html"
-    },
-    {
-      "Name": "Temperatura del aceite",
-      "UUID": "com.hsgaming.scsmon.oiltemp",
-      "Icon": "tile-oil",
-      "States": [{ "Image": "tile-oil", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/fixed.html"
-    },
-    {
-      "Name": "Presion del aire",
-      "UUID": "com.hsgaming.scsmon.airpressure",
-      "Icon": "tile-air",
-      "States": [{ "Image": "tile-air", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/fixed.html"
-    },
-    {
-      "Name": "Bloqueo del diferencial",
-      "UUID": "com.hsgaming.scsmon.difflock",
-      "Icon": "pk-diff",
-      "States": [{ "Image": "pk-diff", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/lights.html"
-    },
-    {
-      "Name": "Freno de estacionamiento (boton)",
-      "UUID": "com.hsgaming.scsmon.emergencybrake",
-      "Icon": "pk-parking-brake-1",
-      "States": [{ "Image": "pk-parking-brake-1", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/lights.html"
-    },
-    {
-      "Name": "Estacionarias",
-      "UUID": "com.hsgaming.scsmon.hazbtn",
-      "Icon": "pk-hazard",
-      "States": [{ "Image": "pk-hazard", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/lights.html"
-    },
-    {
-      "Name": "Intermitente izquierda (boton)",
-      "UUID": "com.hsgaming.scsmon.blinkLbtn",
-      "Icon": "pk-left",
-      "States": [{ "Image": "pk-left", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/lights.html"
-    },
-    {
-      "Name": "Intermitente derecha (boton)",
-      "UUID": "com.hsgaming.scsmon.blinkRbtn",
-      "Icon": "pk-right",
-      "States": [{ "Image": "pk-right", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/lights.html"
-    },
-    {
-      "Name": "Luces (boton)",
-      "UUID": "com.hsgaming.scsmon.lightbtn",
-      "Icon": "pk-low",
-      "States": [{ "Image": "pk-low", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/lights.html"
-    },
-    {
-      "Name": "Largas (boton)",
-      "UUID": "com.hsgaming.scsmon.highbtn",
-      "Icon": "pk-high",
-      "States": [{ "Image": "pk-high", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
+      "Name": "Acople del trailer",
+      "UUID": "com.hsgaming.scsmon.trailerattach",
+      "Icon": "pk-coupling",
+      "States": [
+        {
+          "Image": "pk-coupling",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
       "PropertyInspectorPath": "propertyinspector/lights.html"
     },
     {
       "Name": "Baliza (boton)",
       "UUID": "com.hsgaming.scsmon.beaconbtn",
       "Icon": "pk-beacon",
-      "States": [{ "Image": "pk-beacon", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
+      "States": [
+        {
+          "Image": "pk-beacon",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
       "PropertyInspectorPath": "propertyinspector/lights.html"
     },
     {
-      "Name": "Limpiaparabrisas (boton)",
-      "UUID": "com.hsgaming.scsmon.wiperbtn",
-      "Icon": "pk-wiper",
-      "States": [{ "Image": "pk-wiper", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
+      "Name": "Bloqueo del diferencial",
+      "UUID": "com.hsgaming.scsmon.difflock",
+      "Icon": "pk-diff",
+      "States": [
+        {
+          "Image": "pk-diff",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
       "PropertyInspectorPath": "propertyinspector/lights.html"
     },
     {
-      "Name": "Danos (camion/trailer/carga)",
-      "UUID": "com.hsgaming.scsmon.damage",
-      "Icon": "tile-damage",
-      "States": [{ "Image": "tile-damage", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/lights.html"
-    },
-    {
-      "Name": "Ruta (recorrida/faltante)",
-      "UUID": "com.hsgaming.scsmon.route",
-      "Icon": "tile-route",
-      "States": [{ "Image": "tile-route", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
+      "Name": "Camara exterior",
+      "UUID": "com.hsgaming.scsmon.camexterior",
+      "Icon": "pk-camexterior",
+      "States": [
+        {
+          "Image": "pk-camexterior",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
-      "Name": "Autonomia (combustible)",
-      "UUID": "com.hsgaming.scsmon.range",
-      "Icon": "tile-fuel",
-      "States": [{ "Image": "tile-fuel", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
+      "Name": "Camara interior",
+      "UUID": "com.hsgaming.scsmon.caminterior",
+      "Icon": "pk-caminterior",
+      "States": [
+        {
+          "Image": "pk-caminterior",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
-      "Name": "Estado del motor",
-      "UUID": "com.hsgaming.scsmon.engine",
-      "Icon": "pk-engine",
-      "States": [{ "Image": "pk-engine", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/lights.html"
-    },
-    {
-      "Name": "Freno de estacionamiento (testigo)",
-      "UUID": "com.hsgaming.scsmon.park",
-      "Icon": "pk-parking-brake-1",
-      "States": [{ "Image": "pk-parking-brake-1", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/lights.html"
-    },
-    {
-      "Name": "Acople del trailer",
-      "UUID": "com.hsgaming.scsmon.trailerattach",
-      "Icon": "pk-coupling",
-      "States": [{ "Image": "pk-coupling", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/lights.html"
-    },
-    {
-      "Name": "Ventanilla izquierda",
-      "UUID": "com.hsgaming.scsmon.windowleft",
-      "Icon": "pk-window-left-down",
-      "States": [{ "Image": "pk-window-left-down", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/lights.html"
-    },
-    {
-      "Name": "Ventanilla derecha",
-      "UUID": "com.hsgaming.scsmon.windowright",
-      "Icon": "pk-window-right-down",
-      "States": [{ "Image": "pk-window-right-down", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
-      "PropertyInspectorPath": "propertyinspector/lights.html"
-    },
-    {
-      "Name": "Check Engine",
-      "UUID": "com.hsgaming.scsmon.checkengine",
-      "Icon": "tile-temp",
-      "States": [{ "Image": "tile-temp", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
+      "Name": "Camara techo",
+      "UUID": "com.hsgaming.scsmon.camroof",
+      "Icon": "pk-camroof",
+      "States": [
+        {
+          "Image": "pk-camroof",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
-      "Name": "Autonomia (Motor encendido)",
-      "UUID": "com.hsgaming.scsmon.enginerange",
-      "Icon": "tile-fuel",
-      "States": [{ "Image": "tile-fuel", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
+      "Name": "Crucero (encoder)",
+      "UUID": "com.hsgaming.scsmon.cruiseenc",
+      "Icon": "pk-cruise",
+      "States": [
+        {
+          "Image": "pk-cruise",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Knob"
+      ],
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Rotate": "Velocidad de crucero +/-",
+          "Push": "Activar/desactivar crucero",
+          "Touch": "Activar/desactivar crucero"
+        }
+      },
+      "PropertyInspectorPath": "propertyinspector/encoder.html"
+    },
+    {
+      "Name": "Crucero (velocidad)",
+      "UUID": "com.hsgaming.scsmon.cruise",
+      "Icon": "pk-cruise",
+      "States": [
+        {
+          "Image": "pk-cruise",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
-      "Name": "Marcha (Motor encendido)",
-      "UUID": "com.hsgaming.scsmon.enginegear",
-      "Icon": "tile-gear",
-      "States": [{ "Image": "tile-gear", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
+      "Name": "Crucero: aumentar velocidad",
+      "UUID": "com.hsgaming.scsmon.cruiectrlinc",
+      "Icon": "pk-cruiseinc",
+      "States": [
+        {
+          "Image": "pk-cruiseinc",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Crucero: disminuir velocidad",
+      "UUID": "com.hsgaming.scsmon.cruiectrldec",
+      "Icon": "pk-cruisedec",
+      "States": [
+        {
+          "Image": "pk-cruisedec",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
       "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
       "Name": "Encendido / Apagado motor",
       "UUID": "com.hsgaming.scsmon.enginebtn",
       "Icon": "pk-engine",
-      "States": [{ "Image": "pk-engine", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
+      "States": [
+        {
+          "Image": "pk-engine",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
       "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Estacionarias",
+      "UUID": "com.hsgaming.scsmon.hazbtn",
+      "Icon": "pk-hazard",
+      "States": [
+        {
+          "Image": "pk-hazard",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Freno de estacionamiento (boton)",
+      "UUID": "com.hsgaming.scsmon.emergencybrake",
+      "Icon": "pk-parking-brake-1",
+      "States": [
+        {
+          "Image": "pk-parking-brake-1",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Intermitente derecha (boton)",
+      "UUID": "com.hsgaming.scsmon.blinkRbtn",
+      "Icon": "pk-right",
+      "States": [
+        {
+          "Image": "pk-right",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Intermitente izquierda (boton)",
+      "UUID": "com.hsgaming.scsmon.blinkLbtn",
+      "Icon": "pk-left",
+      "States": [
+        {
+          "Image": "pk-left",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Largas (boton)",
+      "UUID": "com.hsgaming.scsmon.highbtn",
+      "Icon": "pk-high",
+      "States": [
+        {
+          "Image": "pk-high",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Levantar eje del camion",
+      "UUID": "com.hsgaming.scsmon.liftaxle",
+      "Icon": "pk-liftaxle",
+      "States": [
+        {
+          "Image": "pk-liftaxle",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Levantar eje del trailer",
+      "UUID": "com.hsgaming.scsmon.liftaxlet",
+      "Icon": "pk-liftaxlet",
+      "States": [
+        {
+          "Image": "pk-liftaxlet",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Limpiaparabrisas (boton)",
+      "UUID": "com.hsgaming.scsmon.wiperbtn",
+      "Icon": "pk-wiper",
+      "States": [
+        {
+          "Image": "pk-wiper",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Luces (boton)",
+      "UUID": "com.hsgaming.scsmon.lightbtn",
+      "Icon": "pk-low",
+      "States": [
+        {
+          "Image": "pk-low",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Marcha: drive",
+      "UUID": "com.hsgaming.scsmon.geardrive",
+      "Icon": "pk-geardrive",
+      "States": [
+        {
+          "Image": "pk-geardrive",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Marcha: punto muerto",
+      "UUID": "com.hsgaming.scsmon.gear0",
+      "Icon": "pk-gearneutral",
+      "States": [
+        {
+          "Image": "pk-gearneutral",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Marcha: reversa",
+      "UUID": "com.hsgaming.scsmon.gearreverse",
+      "Icon": "pk-gearreverse",
+      "States": [
+        {
+          "Image": "pk-gearreverse",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
     },
     {
       "Name": "Radio del juego",
       "UUID": "com.hsgaming.scsmon.radiobtn",
       "Icon": "pk-radio",
-      "States": [{ "Image": "pk-radio", "TitleAlignment": "bottom" }],
-      "Controllers": ["Keypad", "Information"],
+      "States": [
+        {
+          "Image": "pk-radio",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
       "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Reset suspension",
+      "UUID": "com.hsgaming.scsmon.suspreset",
+      "Icon": "pk-suspreset",
+      "States": [
+        {
+          "Image": "pk-suspreset",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Retarder (encoder)",
+      "UUID": "com.hsgaming.scsmon.retarderenc",
+      "Icon": "pk-retarder",
+      "States": [
+        {
+          "Image": "pk-retarder",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Knob"
+      ],
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Rotate": "Retarder +/-",
+          "Push": "Freno motor (B)",
+          "Touch": "Freno motor (B)"
+        }
+      },
+      "PropertyInspectorPath": "propertyinspector/encoder.html"
+    },
+    {
+      "Name": "Retarder automatico",
+      "UUID": "com.hsgaming.scsmon.retarderauto",
+      "Icon": "pk-retarderauto",
+      "States": [
+        {
+          "Image": "pk-retarderauto",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Suspension delantera: bajar",
+      "UUID": "com.hsgaming.scsmon.frontsuspdwn",
+      "Icon": "pk-frontsuspdwn",
+      "States": [
+        {
+          "Image": "pk-frontsuspdwn",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Suspension delantera: subir",
+      "UUID": "com.hsgaming.scsmon.frontsuspup",
+      "Icon": "pk-frontsuspup",
+      "States": [
+        {
+          "Image": "pk-frontsuspup",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Suspension trasera: bajar",
+      "UUID": "com.hsgaming.scsmon.rearsuspdwn",
+      "Icon": "pk-rearsuspdwn",
+      "States": [
+        {
+          "Image": "pk-rearsuspdwn",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Suspension trasera: subir",
+      "UUID": "com.hsgaming.scsmon.rearsuspup",
+      "Icon": "pk-rearsuspup",
+      "States": [
+        {
+          "Image": "pk-rearsuspup",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Ventanilla derecha",
+      "UUID": "com.hsgaming.scsmon.windowright",
+      "Icon": "pk-window-right-down",
+      "States": [
+        {
+          "Image": "pk-window-right-down",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Ventanilla izquierda",
+      "UUID": "com.hsgaming.scsmon.windowleft",
+      "Icon": "pk-window-left-down",
+      "States": [
+        {
+          "Image": "pk-window-left-down",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Volumen (encoder)",
+      "UUID": "com.hsgaming.scsmon.volumeenc",
+      "Icon": "pk-volume",
+      "States": [
+        {
+          "Image": "pk-volume",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Knob"
+      ],
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Rotate": "Volumen de Windows +/-",
+          "Push": "Silenciar",
+          "Touch": "Silenciar"
+        }
+      },
+      "PropertyInspectorPath": "propertyinspector/encoder.html"
     }
   ],
   "Author": "HS-Gaming",
@@ -265,10 +574,16 @@
   "Description": "Telemetria ATS/ETS2 en el Ajazz (velocidad, marchas, combustible, luces...)",
   "Icon": "icon",
   "Name": "Trucker Simulator",
-  "Version": "1.0",
+  "Version": "1.3.0",
   "SDKVersion": 2,
   "OS": [
-    { "Platform": "windows", "MinimumVersion": "10" },
-    { "Platform": "mac", "MinimumVersion": "10.13" }
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "10.13"
+    }
   ]
 }

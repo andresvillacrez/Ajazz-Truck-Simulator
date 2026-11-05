@@ -14,6 +14,8 @@ function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo) 
             if (s.metric && el("metric")) el("metric").value = s.metric;
             if (s.theme && el("theme")) el("theme").value = s.theme;
             if (s.interval && el("interval")) el("interval").value = s.interval;
+            if (s.invert !== undefined && el("invert")) el("invert").checked = !!s.invert;
+            if (s.step && el("step")) el("step").value = s.step;
         }
     };
 }
@@ -22,10 +24,12 @@ function sendSettings() {
     if (el("metric")) p.metric = el("metric").value;
     if (el("theme")) p.theme = el("theme").value;
     if (el("interval")) p.interval = parseFloat(el("interval").value);
+    if (el("invert")) p.invert = el("invert").checked ? 1 : 0;
+    if (el("step")) p.step = parseInt(el("step").value, 10) || 1;
     websocket.send(JSON.stringify({ event: "setSettings", context: context, payload: p }));
 }
 document.addEventListener("DOMContentLoaded", function() {
-    ["metric", "theme", "interval"].forEach(function(id) {
+    ["metric", "theme", "interval", "invert", "step"].forEach(function(id) {
         if (el(id)) el(id).onchange = sendSettings;
     });
 });

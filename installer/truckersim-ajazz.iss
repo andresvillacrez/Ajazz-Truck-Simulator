@@ -3,7 +3,7 @@
 ; Mantener AppVersion sincronizada con manifest.json y CHANGELOG.md.
 
 #define MyAppName "Trucker Simulator para Ajazz StreamDock"
-#define MyAppVersion "1.0"
+#define MyAppVersion "1.3.0"
 #define MyAppPublisher "HS-Gaming"
 #define PluginId "com.hsgaming.scsmon.sdPlugin"
 
@@ -11,7 +11,11 @@
 AppId={{8F3A2B41-7C6E-4A9B-9D2F-TRUCKERSIM01}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
+AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
+AppPublisherURL=https://github.com/andresvillacrez/Ajazz-Truck-Simulator
+AppSupportURL=https://github.com/andresvillacrez/Ajazz-Truck-Simulator/issues
+AppUpdatesURL=https://github.com/andresvillacrez/Ajazz-Truck-Simulator/releases
 DefaultDirName={autopf}\TruckerSimAjazz
 ; Se instala en AppData del usuario + carpetas de los juegos: no necesita
 ; carpeta de programa real, pero pedimos admin para escribir en Steam.
@@ -23,6 +27,8 @@ OutputBaseFilename=TruckerSim-Ajazz-Setup-{#MyAppVersion}
 WizardStyle=modern
 ShowLanguageDialog=no
 LanguageDetectionMethod=none
+LicenseFile=..\LICENSE
+SetupIconFile=LOGO.ico
 
 [Languages]
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
@@ -46,6 +52,11 @@ Source: "..\plugins\{#PluginId}\backend.exe"; DestDir: "{userappdata}\HotSpot\St
 Source: "..\plugins\{#PluginId}\manifest.json"; DestDir: "{userappdata}\HotSpot\StreamDock\plugins\{#PluginId}"; Components: plugin; Flags: ignoreversion
 Source: "..\plugins\{#PluginId}\*.png"; DestDir: "{userappdata}\HotSpot\StreamDock\plugins\{#PluginId}"; Components: plugin; Flags: ignoreversion
 Source: "..\plugins\{#PluginId}\propertyinspector\*"; DestDir: "{userappdata}\HotSpot\StreamDock\plugins\{#PluginId}\propertyinspector"; Components: plugin; Flags: ignoreversion recursesubdirs
+; --- Plugin Testigos a AppData ---
+Source: "..\plugins\com.hsgaming.scsmon.testigos.sdPlugin\backend.exe"; DestDir: "{userappdata}\HotSpot\StreamDock\plugins\com.hsgaming.scsmon.testigos.sdPlugin"; Components: plugin; Flags: ignoreversion
+Source: "..\plugins\com.hsgaming.scsmon.testigos.sdPlugin\manifest.json"; DestDir: "{userappdata}\HotSpot\StreamDock\plugins\com.hsgaming.scsmon.testigos.sdPlugin"; Components: plugin; Flags: ignoreversion
+Source: "..\plugins\com.hsgaming.scsmon.testigos.sdPlugin\*.png"; DestDir: "{userappdata}\HotSpot\StreamDock\plugins\com.hsgaming.scsmon.testigos.sdPlugin"; Components: plugin; Flags: ignoreversion
+Source: "..\plugins\com.hsgaming.scsmon.testigos.sdPlugin\propertyinspector\*"; DestDir: "{userappdata}\HotSpot\StreamDock\plugins\com.hsgaming.scsmon.testigos.sdPlugin\propertyinspector"; Components: plugin; Flags: ignoreversion recursesubdirs
 ; --- DLL a cada juego (carpetas elegidas en el asistente) ---
 Source: "..\dll\scs-telemetry.dll"; DestDir: "{code:GetATSDllDir}"; Components: dll; Flags: ignoreversion; Check: ShouldInstallATS
 Source: "..\dll\scs-telemetry.dll"; DestDir: "{code:GetETS2DllDir}"; Components: dll; Flags: ignoreversion; Check: ShouldInstallETS2
@@ -53,6 +64,8 @@ Source: "..\dll\scs-telemetry.dll"; DestDir: "{code:GetETS2DllDir}"; Components:
 [UninstallDelete]
 Type: filesandordirs; Name: "{userappdata}\HotSpot\StreamDock\plugins\{#PluginId}\scsmon-test"
 Type: files; Name: "{userappdata}\HotSpot\StreamDock\plugins\{#PluginId}\backend.log"
+Type: filesandordirs; Name: "{userappdata}\HotSpot\StreamDock\plugins\com.hsgaming.scsmon.testigos.sdPlugin\scsmon-test"
+Type: files; Name: "{userappdata}\HotSpot\StreamDock\plugins\com.hsgaming.scsmon.testigos.sdPlugin\backend.log"
 
 [Code]
 var

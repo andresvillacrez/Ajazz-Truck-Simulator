@@ -29,6 +29,9 @@ En Opciones → Teclas → Camion:
 | Bloqueo diferencial | `V` | Por defecto |
 | Freno estacionamiento | `Espacio` | Por defecto |
 | Crucero | `C` | Por defecto |
+| Crucero +/- (encoder) | Automatico / manual | El plugin agrega una tecla libre si falta |
+| Retarder +/- (encoder) | Automatico / manual | Respeta `;` / `=` de ETS2 y agrega si falta |
+| Volumen (encoder) | Teclas multimedia | No requiere configuracion |
 | Ventanilla izq. subir / bajar | Automatico | Toque sube; mantener >400 ms baja |
 | Ventanilla der. subir / bajar | Automatico | Toque sube; mantener >400 ms baja |
 
@@ -47,6 +50,14 @@ En Opciones → Teclas → Camion:
 > plugin inyecta **VK + scan** (ETS2 ignora el scan-only) y mantiene la tecla
 > de ventanilla 1,4 s para que la accion recorra el cristal. No reasignes las
 > teclas de los botones a otras acciones.
+
+> **Encoders (AKP03E/AKP05):** en StreamDock estan en **Rueda > Trucker
+> Simulator**. Arrastra `Crucero (encoder)`, `Retarder (encoder)` o
+> `Volumen (encoder)` a los mandos. El Property
+> Inspector permite invertir el giro y ajustar las teclas por muesca. Si el
+> perfil no tiene tecla para crucero +/- o retarder +/-, el plugin agrega una
+> tecla libre al cerrar el juego (backup `.hs-window-backup`, sin pisar
+> bindings). Espera unos segundos y reinicia el juego para que SCS lea `controls.sii`.
 
 ## Instalacion manual (sin instalador)
 

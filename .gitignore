@@ -21,5 +21,25 @@ setup-share.log
 
 # Salida del instalador y temporales de docs
 installer/Output/
+installer/macos/.cache/
 Thumbs.db
 Desktop.ini
+
+# Salidas de los ports
+ports/*/dist/
+ports/*/.build/
+
+# Iconos nuevos (fuente local; los usados ya se copiaron al plugin)
+New Icons/
+
+# Backups locales de iconos/perfiles
+backups/
+
+# Archivos auxiliares de macOS y temporales
+._*
+*.log
+*.tmp
+
+# Proyectos auxiliares no integrados al plugin principal
+fps/
+plugins/com.hsgaming.vitals.sdPlugin/

@@ -1,0 +1,85 @@
+TRUCKER SIMULATOR PARA AJAZZ STREAMDOCK - macOS (BETA)
+======================================================
+
+Version: 1.0-beta
+Fecha: 2026-10-31
+
+Este paquete instala el plugin en el perfil del usuario y la telemetria SCS
+en American Truck Simulator y/o Euro Truck Simulator 2.
+
+CONTENIDO
+---------
+- Instalar Trucker Simulator.command
+- Desinstalar Trucker Simulator.command
+- payload/com.hsgaming.scsmon.sdPlugin/   Plugin (backend macOS x86_64)
+- payload/libscs-telemetry.dylib          Telemetria SCS para macOS
+- LICENCIA-MIT.txt                        Licencia del proyecto
+- scs-sdk-plugin-MIT.txt                  Licencia de la telemetria
+
+REQUISITOS
+----------
+- macOS 10.13 o superior.
+- Stream Dock / Ajazz instalado y el dispositivo conectado.
+- ATS y/o ETS2. Se detectan las instalaciones de Steam y las de /Applications.
+- Mac Intel x86_64. En Apple Silicon hace falta Rosetta 2:
+    softwareupdate --install-rosetta --agree-to-license
+
+INSTALACION
+-----------
+1. Descomprime el ZIP.
+2. Doble clic en "Instalar Trucker Simulator.command".
+   Si macOS lo bloquea: clic derecho > Abrir.
+   Si no se abre, ejecuta en Terminal:
+     cd /ruta/a/la/carpeta
+     chmod +x "Instalar Trucker Simulator.command"
+     ./"Instalar Trucker Simulator.command"
+3. El instalador cierra Stream Dock, copia el plugin y la telemetria, y
+   muestra un resumen.
+4. Abre Stream Dock. Las acciones aparecen en la categoria Trucker Simulator.
+5. Abre ATS/ETS2. La primera vez, macOS pedira permiso de Accesibilidad para
+   enviar teclas. Activalo en:
+     Ajustes del Sistema > Privacidad y seguridad > Accesibilidad
+   Marca Stream Dock (o el proceso backend si aparece).
+6. Si el juego estaba abierto, cierralo y vuelve a abrirlo.
+
+RUTAS QUE USA
+-------------
+Plugin:
+  ~/Library/Application Support/HotSpot/StreamDock/plugins/
+  com.hsgaming.scsmon.sdPlugin/
+
+Telemetria (dentro de cada juego):
+  American Truck Simulator.app/Contents/MacOS/plugins/libscs-telemetry.dylib
+  Euro Truck Simulator 2.app/Contents/MacOS/plugins/libscs-telemetry.dylib
+
+ACCIONES INCLUIDAS (21)
+-----------------------
+Velocidad, marcha, RPM, combustible, consumo, crucero, limite de via,
+temperatura del camion, temperatura del aceite, presion del aire, bloqueo
+del diferencial, freno de estacionamiento (boton), estacionarias,
+intermitente izquierda/derecha, luces, largas, baliza, limpiaparabrisas,
+danos y ruta.
+
+LIMITACIONES DE ESTA BETA
+-------------------------
+- Es el backend macOS con el conjunto de acciones de la v1.0 de Windows.
+- Las 11 acciones nuevas de la v1.1 (autonomia con motor, estado del motor,
+  check engine, autonomia/marcha condicionadas, boton de motor, radio,
+  acople del trailer y ventanillas automaticas) aun no estan portadas.
+- No hay paridad completa con la version Windows 1.1.
+- El backend es x86_64. En Apple Silicon funciona con Rosetta 2.
+- La telemetria se lee en modo pasivo desde /SCSTelemetry.
+
+DESINSTALAR
+-----------
+Doble clic en "Desinstalar Trucker Simulator.command". Elimina el plugin y,
+si lo confirmas, la telemetria de los juegos.
+
+TELEMETRIA
+----------
+libscs-telemetry.dylib v1.12.1, compilado desde:
+  https://github.com/truckermudgeon/scs-sdk-plugin
+Licencia MIT de Hans (2014). El texto esta en scs-sdk-plugin-MIT.txt.
+
+El plugin no modifica partidas ni envia datos a Internet. Solo lee la
+telemetria local que publica el juego.

@@ -261,8 +261,11 @@ final class Canvas {
     }
     func drawImage(_ img: CGImage, _ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat, alpha: CGFloat = 1) {
         ctx.saveGState(); ctx.setAlpha(alpha)
-        ctx.translateBy(x: 0, y: 72); ctx.scaleBy(x: 1, y: -1)
-        ctx.draw(img, in: CGRect(x: x, y: y, width: w, height: h))
+        // El contexto ya usa origen abajo-izquierda (Quartz), asi que la imagen
+        // se dibuja recta con draw(); solo hay que convertir el rectangulo de
+        // coordenadas GDI+ (arriba-izquierda) a Quartz con cg(). Voltear el CTM
+        // aqui espejaba verticalmente todos los iconos (salian de cabeza).
+        ctx.draw(img, in: cg(x, y, w, h))
         ctx.restoreGState()
     }
     // Copia del icono teñida de rojo con alpha=pulse (equivalente al ColorMatrix de GDI+).

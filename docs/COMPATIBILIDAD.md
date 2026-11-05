@@ -1,27 +1,32 @@
 # Compatibilidad de dispositivos
 
-El plugin usa acciones **`Keypad` estandar** del SDK StreamDeck/StreamDock:
-cualquier dispositivo con teclas LCD las acepta **sin cambios** — el software
-escala los PNG de 72 px al tamano de cada tecla.
+Las acciones de teclas usan **`Keypad` estandar** del SDK
+StreamDeck/StreamDock y cualquier dispositivo con teclas LCD las acepta
+**sin cambios**. Las acciones de encoder usan `Controllers: ["Knob"]` y
+solo aparecen en dispositivos con mandos giratorios (AKP03E/AKP05), dentro de la pestana **Rueda**.
+El software escala los PNG al tamano de cada tecla o pantalla.
 
 ## Matriz
 
 | Dispositivo | Teclas LCD | Extras | Estado |
 |---|---|---|---|
 | Ajazz AKP153R / AKP153E | 15 (3×5), ~85 px | — | **Probado**: todo funciona |
-| Ajazz AKP05 / AKP05E | 10 (2×5), ~112 px | 4 knobs + tira tactil | Compatible en teclas; knobs sin acciones (pendiente de definir mapeo) |
-| Ajazz AKP03 / Mirabox N3 | 6 LCD | 3 encoders | Compatible en teclas (no probado aqui) |
+| Ajazz AKP05 / AKP05E | 10 (2×5), ~112 px | 4 knobs + tira tactil | Compatible: teclas + encoders (crucero/retarder/volumen) |
+| Ajazz AKP03 / AKP03E / Mirabox N3 | 6 LCD | 3 encoders | Compatible: teclas + encoders (no probado en hardware aqui) |
 | Otros Keypad StreamDock | LCD | — | Compatible por construccion |
 
 ## Notas por dispositivo
 
-- **AKP05/E**: los PNG se reescalan de 72 → ~112 px (leve perdida de
-  nitidez, aceptable). Los knobs generan eventos `Encoder`
-  (`dialRotate`/`dialDown`): el backend hoy solo atiende `keyDown`, asi que
-  no hacen nada hasta que se definan acciones (candidatos: crucero +/−,
-  volumen, retarder).
-- **Tira tactil / touch strip**: fuera de alcance (requiere acciones
-  dedicadas del SDK).
+- **AKP05/E y AKP03E**: los PNG se reescalan al tamano de cada tecla. Los
+  knobs generan eventos Encoder (dialRotate/dialDown) y ya tienen
+  acciones dedicadas: crucero, retarder y volumen. En AKP03E el pulso del
+  encoder de crucero activa/desactiva el control (C), el de retarder usa el
+  freno motor (B) y el de volumen silencia. Si faltan teclas de crucero o
+  retarder, el plugin agrega una libre al cerrar el juego (sin pisar las del
+  usuario) y hay que esperar unos segundos y reiniciar el juego una vez.
+- **Tira tactil / touch strip**: las acciones de encoder usan el layout
+  $B1 para titulo, valor e indicador cuando el dispositivo tiene pantalla
+  tactil; en AKP03E los mandos no tienen pantalla propia.
 
 ## Como probar en un dispositivo nuevo
 

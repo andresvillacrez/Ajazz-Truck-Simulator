@@ -1,0 +1,115 @@
+#!/bin/bash
+# postinstall del paquete macOS. Se ejecuta como root.
+# Copia el payload a la biblioteca del usuario que ha iniciado sesion.
+
+set -u
+
+PAYLOAD="/private/tmp/truckersim-ajazz-payload"
+LOG="/var/log/truckersim-ajazz-install.log"
+
+log() {
+  printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG" 2>/dev/null || true
+}
+
+log "Inicio postinstall"
+
+if [ ! -d "$PAYLOAD/com.hsgaming.scsmon.sdPlugin" ]; then
+  log "ERROR: payload no encontrado en $PAYLOAD"
+  exit 1
+fi
+
+CONSOLE_USER="$(stat -f%Su /dev/console 2>/dev/null || true)"
+if [ -z "$CONSOLE_USER" ] || [ "$CONSOLE_USER" = "root" ] || [ "$CONSOLE_USER" = "loginwindow" ]; then
+  CONSOLE_USER="${SUDO_USER:-}"
+fi
+if [ -z "$CONSOLE_USER" ] || [ "$CONSOLE_USER" = "root" ]; then
+  log "ERROR: no se pudo determinar el usuario de consola"
+  exit 1
+fi
+
+USER_HOME="$(dscl . -read "/Users/$CONSOLE_USER" NFSHomeDirectory 2>/dev/null | awk '{print $2}')"
+if [ -z "$USER_HOME" ] || [ ! -d "$USER_HOME" ]; then
+  log "ERROR: home no encontrado para $CONSOLE_USER"
+  exit 1
+fi
+
+log "Usuario: $CONSOLE_USER ($USER_HOME)"
+
+APP_SUPPORT="$USER_HOME/Library/Application Support"
+PLUGIN_DIR="$APP_SUPPORT/HotSpot/StreamDock/plugins"
+TARGET="$PLUGIN_DIR/com.hsgaming.scsmon.sdPlugin"
+
+# Cerrar Stream Dock y el backend del plugin.
+pkill -u "$CONSOLE_USER" -f "Stream Dock.app/Contents/MacOS" >/dev/null 2>&1 || true
+pkill -u "$CONSOLE_USER" -f "StreamDock.app/Contents/MacOS" >/dev/null 2>&1 || true
+pkill -u "$CONSOLE_USER" -f "com.hsgaming.scsmon.sdPlugin/backend" >/dev/null 2>&1 || true
+
+install -d -o "$CONSOLE_USER" -g staff "$PLUGIN_DIR" || {
+  log "ERROR: no se pudo crear $PLUGIN_DIR"
+  exit 1
+}
+
+if [ -d "$TARGET" ]; then
+  BACKUP="$TARGET.backup-$(date +%Y%m%d-%H%M%S)"
+  cp -R "$TARGET" "$BACKUP" || true
+  chown -R "$CONSOLE_USER":staff "$BACKUP" 2>/dev/null || true
+  log "Backup: $BACKUP"
+fi
+
+rm -rf "$TARGET"
+cp -R "$PAYLOAD/com.hsgaming.scsmon.sdPlugin" "$TARGET" || {
+  log "ERROR: no se pudo copiar el plugin"
+  exit 1
+}
+chown -R "$CONSOLE_USER":staff "$TARGET"
+chmod +x "$TARGET/backend" 2>/dev/null || true
+xattr -dr com.apple.quarantine "$TARGET" 2>/dev/null || true
+log "Plugin instalado en $TARGET"
+
+# Instalar telemetria en los juegos detectados.
+STEAM="$APP_SUPPORT/Steam"
+GAME_APPS=()
+
+add_game() {
+  [ -d "$1/Contents/MacOS" ] || return 0
+  local existing
+  for existing in "${GAME_APPS[@]:-}"; do
+    [ "$existing" = "$1" ] && return 0
+  done
+  GAME_APPS+=("$1")
+}
+
+add_game "$STEAM/steamapps/common/American Truck Simulator/American Truck Simulator.app"
+add_game "$STEAM/steamapps/common/Euro Truck Simulator 2/Euro Truck Simulator 2.app"
+add_game "/Applications/American Truck Simulator.app"
+add_game "/Applications/Euro Truck Simulator 2.app"
+
+VDF="$STEAM/steamapps/libraryfolders.vdf"
+if [ -f "$VDF" ]; then
+  while IFS= read -r line; do
+    case "$line" in
+      *'"path"'*)
+        LIB="$(printf '%s\n' "$line" | sed -n 's/.*"path"[[:space:]]*"\(.*\)".*/\1/p')"
+        if [ -n "$LIB" ]; then
+          add_game "$LIB/steamapps/common/American Truck Simulator/American Truck Simulator.app"
+          add_game "$LIB/steamapps/common/Euro Truck Simulator 2/Euro Truck Simulator 2.app"
+        fi
+        ;;
+    esac
+  done < "$VDF"
+fi
+
+for GAME in "${GAME_APPS[@]:-}"; do
+  [ -d "$GAME/Contents/MacOS" ] || continue
+  DEST_DIR="$GAME/Contents/MacOS/plugins"
+  mkdir -p "$DEST_DIR" || continue
+  cp "$PAYLOAD/libscs-telemetry.dylib" "$DEST_DIR/libscs-telemetry.dylib" || continue
+  chown "$CONSOLE_USER":staff "$DEST_DIR/libscs-telemetry.dylib" 2>/dev/null || true
+  chmod 755 "$DEST_DIR/libscs-telemetry.dylib" 2>/dev/null || true
+  xattr -d com.apple.quarantine "$DEST_DIR/libscs-telemetry.dylib" 2>/dev/null || true
+  log "Telemetria instalada en $DEST_DIR"
+done
+
+rm -rf "$PAYLOAD"
+log "Fin postinstall"
+exit 0

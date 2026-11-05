@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<script src="pi.js"></script>
+<style>
+body { background:#111; color:#fff; font-family:sans-serif; padding:10px; }
+h3 { margin:0 0 8px 0; }
+p { color:#aaa; font-size:12px; line-height:1.35; }
+label { display:block; margin-top:10px; }
+input[type="number"] { width:64px; }
+.box { border:1px solid #333; border-radius:6px; padding:8px; background:#181818; }
+</style>
+</head>
+<body>
+<h3>HS SCS Encoder</h3>
+<p>Gira el mando para ajustar y pulsa para la accion indicada en la accion.</p>
+<div class="box">
+  <label><input type="checkbox" id="invert"> Invertir sentido de giro</label>
+  <label>Teclas por muesca
+    <input type="number" id="step" value="1" min="1" max="5" step="1">
+  </label>
+  <label>Intervalo de refresco (seg)
+    <input type="number" id="interval" value="0.05" min="0.02" max="60" step="0.05">
+  </label>
+</div>
+<p><b>Asignacion automatica:</b> si tu perfil no tiene tecla para crucero +/- o
+retarder +/-, el plugin agrega una tecla libre cuando cierras el juego. Nunca
+pisa bindings existentes y guarda un backup. Espera unos segundos y reinicia
+el juego para que SCS lea el cambio.</p>
+<p>Tambien puedes asignar las teclas manualmente en Opciones &gt; Teclas; el
+plugin usara las que ya existan. El pulso del encoder de crucero activa el
+control (C), el de retarder usa el freno motor (B) y el de volumen silencia.</p>
+</body>
+</html>

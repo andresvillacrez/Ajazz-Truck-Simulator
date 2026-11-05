@@ -1,5 +1,100 @@
 # CHANGELOG
 
+## [1.3.0] - 2026-11-04
+
+### Acciones
+- Eliminadas 5 acciones redundantes/testigos: `engine`, `checkengine`,
+  `enginerange`, `enginegear` y `park`.
+- Rediseñados `fuel`, `range` y `route` con nuevas layouts, barras y colores
+  semánticos.
+- Nuevo diseño de combustible: porcentaje grande, litros, autonomía y barra
+  de nivel con aviso ámbar/rojo.
+- Nueva vista de autonomía con número grande, road motif y color por distancia.
+- Ruta mejorada: distancia restante, ETA, barra de avance con marcador y
+  recorrido/plan.
+
+### Ports
+- Nueva estructura `ports/windows`, `ports/macos` y `ports/linux-opendeck`.
+- Fuentes movidas a `ports/windows/src/backend.cs` y
+  `ports/macos/src/backend.swift`; los recursos compartidos permanecen en
+  `plugins/com.hsgaming.scsmon.sdPlugin/`.
+- Añadido port Linux/OpenDeck experimental con puente Wine/Proton
+  (`backend-linux.sh`), manifiesto Linux, build e instalador.
+- Añadida auditoría priorizada en `ports/MEJORAS.md`.
+
+### Backend Windows
+- Muestreo y render desacoplados: hilo receptor WebSocket dedicado, cola de
+  eventos y bucle de muestreo a 30 Hz.
+- Render bajo demanda con límite de 33 ms por contexto; el intervalo del
+  Property Inspector se conserva como máximo (mínimo 0.02 s).
+- `Ws.SendRaw` protegido con lock para evitar tramas mezcladas entre el hilo
+  receptor y el de render.
+- `Ws.SendRaw` sin `MemoryStream` ni copia completa del frame: cabecera y
+  mascara en buffers reutilizados, payload enmascarado por bloques de 8 KB y
+  un solo RNG. Validado con tramas de 5 B, 1 KB y 100 KB.
+- Benchmark local (500 tramas de 30 KB, loopback): 132 ms -> 102 ms.
+- P1.4: `FlashWatch` reutiliza el visor de telemetria del bucle principal y
+  adapta el sondeo: 15 ms activo, 100 ms en pausa, 250 ms sin juego/MMF.
+  Mantiene el latch de 1,5 s para el destello de largas y registra el cambio
+  de modo en `backend.log`.
+- Log de eventos por frame eliminado salvo `-Verbose`; menos I/O en el camino
+  caliente.
+- Property Inspector: intervalo por defecto 0.05 s, mínimo 0.02 s.
+- Cola de entrada dedicada (`scsmon-input`): `PressKey`, `PressScan` y
+  `PressScanHold` ya no bloquean el hilo de render/telemetría.
+- Render adaptativo por dispositivo: 96 px para AKP153/AKP05 y 144 px para
+  AKP03E, detectado desde `deviceDidConnect` (`deviceInfo.size`/nombre).
+- Iconos y tiles cacheados por tamaño; supersampling con `ScaleTransform` y
+  `AntiAliasGridFit` para texto más nítido.
+- Nuevo diagnóstico `-RenderDiag`: genera 22 acciones a 72/96/144 px en
+  `%TEMP%\scsmon-render-*`.
+
+### Encoders AKP03E / AKP05
+- Nuevas acciones `cruiseenc`, `retarderenc` y `volumeenc` para los mandos
+  giratorios, con `Controllers: ["Knob"]` y layout `$B1`.
+- Nuevas acciones para controles no presentes: `liftaxle`, `liftaxlet`,
+  `cruiseinc`, `cruisedec`, `retarderauto`, `frontsuspup`,
+  `frontsuspdwn`, `rearsuspup`, `rearsuspdwn` y `suspreset`.
+- Nuevas acciones de camara: `camexterior`, `caminterior` y `camroof`,
+  con iconos `cam/blue` y teclas 1/2/4 del juego.
+- Nuevo plugin separado `com.hsgaming.scsmon.testigos.sdPlugin` con 12
+  testigos: velocidad, marcha, RPM, combustible, consumo, limite,
+  temperatura motor/aceite, presion, danos, ruta y autonomia.
+- Esas 12 acciones se retiraron del plugin principal para evitar duplicados.
+- Camara: blanco inactivo y azul con pulse cuando esta seleccionada.
+- Nuevas acciones de marcha: `geardrive`, `gear0` y `gearreverse`, con
+  iconos `gears` y estado activo segun la marcha registrada. Usan
+  auto-binding por `Alt+tecla` si el perfil no tiene binding.
+- Marcha: reversa en rojo y punto muerto en azul cuando estan activas.
+- Corregido: punto muerto usa el azul del testigo de luces altas y reversa
+  usa el rojo del freno de estacionamiento.
+- Eliminada la accion `cruiseresume` (Crucero: reanudar).
+- Estas acciones usan auto-binding de teclas libres si el perfil no tiene
+  binding; en ATS se asignan Alt+tecla para no pisar bindings existentes.
+- Corregido: StreamDock filtra por `Knob` (no por `Encoder`); las tres
+  acciones ya aparecen en la pestana **Rueda** del software Ajazz.
+- Iconos actualizados con `New Icons`: 37 iconos `pk-*`/`tile-*` reemplazados.
+  Backup completo en `backups/icons-20261104-231303` con `icon-map.txt`.
+- Limpiaparabrisas ahora ocupa todo el tile, con el estado en etiqueta inferior.
+- Radio rediseñado con encuadre (borde redondeado) como los demás iconos.
+- Radio: icono reducido un 20% adicional y encuadre con grosor doble.
+- Motor usa `engine_start_2` / `engine_stop_2`.
+- Todos los pulsos se unifican al estilo de balizas (alpha sobre icono `-c`).
+- Estacionarias ahora usa el icono `hazard` en el tile (antes mostraba flechas).
+- Corregido pulse de los 6 testigos recién creados (cámaras y marchas): ahora
+  re-renderizan cada 100 ms como balizas.
+- Radio y crucero: icono apagado oscuro y encendido en color con pulse.
+- Radio rediseñado con encuadre redondeado y contenido reducido un 20%.
+- `dialRotate` y `dialDown` atendidos por el backend; la entrada se encola en
+  `scsmon-input` y no bloquea el render.
+- Crucero: `cruiectrlinc` / `cruiectrldec`, pulso = `C`.
+- Retarder: `retarderup` / `retarderdown`, pulso = `B` (freno motor).
+- Volumen: teclas multimedia de Windows, pulso = silencio.
+- Si el perfil no tiene tecla para crucero/retarder, se agrega una tecla
+  libre al cerrar el juego (backup `.hs-window-backup`, sin pisar bindings).
+- Property Inspector `encoder.html`: invertir giro y teclas por muesca.
+- Nuevo modo de diagnostico `-NoInput` para probar eventos sin inyectar teclas.
+
 ## [1.1] - 2026-10-29
 
 ### Nuevas características y acciones

@@ -2,7 +2,7 @@
 
 Plugin **Trucker Simulator** (`com.hsgaming.scsmon`): telemetria en vivo de
 **American Truck Simulator** y **Euro Truck Simulator 2** en controladoras
-Ajazz / StreamDock (AKP153R/E probado; AKP05, AKP03 y demas compatibles —
+Ajazz / StreamDock (AKP153R/E probado; AKP05, AKP03 y demas compatibles â€”
 ver `docs/COMPATIBILIDAD.md`).
 
 Velocidad, marchas, RPM, combustible, ruta, danos y todos los testigos del
@@ -13,8 +13,15 @@ estacionarias, baliza, limpiaparabrisas, diferencial, freno, crucero).
 
 ## Caracteristicas
 
-21 acciones en la v1.0 publicada (el arbol local ya define 32: ver
-[Estado de desarrollo](#estado-de-desarrollo-2026-10-27)) en 2 grupos:
+**Windows 1.3.0** define 34 acciones (se eliminan 5 testigos redundantes y se
+rediseñan combustible, autonomía y ruta). **Trucker Simulator Testigos** es un
+plugin separado con 12 testigos de solo lectura. **macOS** es una beta con las
+21 acciones
+de la v1.0 (ver [Estado de desarrollo](#estado-de-desarrollo-2026-11-04)) en
+2 grupos.
+
+**Linux/OpenDeck** es experimental y usa el backend Windows mediante
+Wine/Proton (32 acciones, ver `ports/linux-opendeck/`).
 
 **Monitores** (solo muestran): velocidad (velocimetro), marcha, RPM con barra
 de zona y aviso CAMBIA, combustible (surtidor + barra + autonomia), consumo
@@ -28,24 +35,39 @@ limpiaparabrisas (`P`, ciclo OFF/A/2/3), bloqueo diferencial (`V`), freno de
 estacionamiento (`Espacio`), crucero (`C`) y ventanillas izquierda/derecha
 (toque = subir, mantener = bajar; sin asignar teclas a mano).
 
+**Encoders** (AKP03E / AKP05): tres acciones para los mandos giratorios.
+En StreamDock aparecen en **Rueda > Trucker Simulator**.
+Crucero (gira +/-; pulso `C`), retarder (gira +/-; pulso `B`, freno motor) y
+volumen de Windows (pulso = silencio). Si el perfil del juego no tiene teclas
+para crucero +/- o retarder +/-, el plugin agrega teclas libres al cerrar el
+juego (nunca pisa bindings existentes); espera unos segundos y reinicia el
+juego para que SCS lea el cambio. El Property Inspector permite invertir el
+giro y ajustar las teclas por muesca.
+
 Detalles tecnicos: `docs/DESARROLLO.md`. Asignacion de teclas: `docs/INSTALACION.md`.
 
 ## Requisitos
 
-- Windows 10/11 (64 bits).
+- Windows 10/11 (64 bits), o macOS 10.13+ (beta, Intel x86_64; en Apple
+  Silicon requiere Rosetta 2).
 - ATS y/o ETS2 (Steam o instalacion independiente).
 - Software StreamDock / Ajazz con el dispositivo conectado.
-- `scs-telemetry.dll` de RenCloud (v1.12.x) instalada en cada juego — el
-  instalador lo hace solo; no se distribuye en este repo por licencia.
+- Telemetria SCS: `scs-telemetry.dll` en Windows o
+  `libscs-telemetry.dylib` en macOS. Los instaladores la incluyen (licencia
+  MIT); para compilar desde fuente se descarga segun `docs/DESARROLLO.md`.
 
 ## Instalacion
 
-1. Descarga `TruckerSim-Ajazz-Setup-X.Y.exe` de la seccion Releases.
+### Windows
+
+1. Usa `installer/Output/TruckerSim-Ajazz-Setup-1.2.exe` cuando este generado
+   (compilalo con Inno Setup; ver `installer/README.md`). El instalador 1.1
+   sigue disponible, pero no incluye las acciones de encoder.
 2. Ejecuta el instalador: detecta ATS/ETS2 en Steam automaticamente. Si tu
    juego **no es de Steam**, usa el boton *Examinar* y apunta a su carpeta.
 3. Abre (o reinicia) el software StreamDock: las acciones aparecen en la
    categoria **Trucker Simulator**.
-4. En el juego, asigna `F` a estacionarias (Opciones → Teclas; viene sin
+4. En el juego, asigna `F` a estacionarias (Opciones â†’ Teclas; viene sin
    asignar). El resto (`L K O [ ] P V C Espacio`) viene asignado por defecto.
 5. **Ventanillas**: no hay que asignar nada. El plugin agrega solo los
    bindings que falten (`lwin*`/`rwin*`) al perfil activo y guarda un backup
@@ -53,49 +75,100 @@ Detalles tecnicos: `docs/DESARROLLO.md`. Asignacion de teclas: `docs/INSTALACION
    instalacion, cierralo y vuelve a abrirlo una vez: SCS solo lee
    `controls.sii` al arrancar.
 
+### macOS (beta)
+
+1. Usa `installer/Output/TruckerSim-Ajazz-macOS-1.0-beta.zip`.
+2. Descomprime y haz doble clic en `Instalar Trucker Simulator.command`. Si
+   Gatekeeper lo bloquea, usa clic derecho â†’ Abrir.
+3. El instalador copia el plugin a
+   `~/Library/Application Support/HotSpot/StreamDock/plugins/` y la telemetria
+   a `American Truck Simulator.app/Contents/MacOS/plugins/` y
+   `Euro Truck Simulator 2.app/Contents/MacOS/plugins/`.
+4. Abre Stream Dock y el juego. Concede permiso de **Accesibilidad** a Stream
+   Dock (o al proceso `backend`) para que los botones puedan enviar teclas.
+5. La beta macOS no incluye las 11 acciones nuevas de Windows 1.1 ni las
+   ventanillas automaticas. Detalle: `installer/macos/README.md`.
+
 Guia paso a paso con capturas: `docs/INSTALACION.md`.
 
 ## Dispositivos compatibles
 
 | Dispositivo | Teclas | Estado |
 |---|---|---|
-| Ajazz AKP153R / AKP153E | 15 LCD (3×5) | Probado |
-| Ajazz AKP05 / AKP05E | 10 LCD + 4 knobs + tira tactil | Compatible (teclas; knobs sin acciones asignadas) |
-| Ajazz AKP03 y demas Keypad | LCD | Compatible (acciones Keypad estandar) |
+| Ajazz AKP153R / AKP153E | 15 LCD (3Ã—5) | Probado |
+| Ajazz AKP05 / AKP05E | 10 LCD + 4 knobs + tira tactil | Compatible (teclas + encoders) |
+| Ajazz AKP03 / AKP03E y demas Keypad | 6 LCD + 3 encoders | Compatible (teclas + encoders) |
 
-Las acciones son `Keypad` estandar: funcionan en cualquier dispositivo sin
-cambios. Detalle: `docs/COMPATIBILIDAD.md`.
+Las acciones de teclas son `Keypad` estandar y funcionan en cualquier
+dispositivo; las acciones de encoder usan `Controllers: ["Knob"]` y
+aparecen solo en dispositivos con mandos giratorios. Detalle:
+`docs/COMPATIBILIDAD.md`.
 
 ## Diagnostico
 
 ```bat
 backend.exe -Test        :: vuelca valores + PNGs a %TEMP%\scsmon-test
+backend.exe -RenderDiag  :: renderiza 22 acciones a 72/96/144 px
 backend.exe -WatchHigh   :: muestrea largas 60 s (probar rafagas)
-backend.exe -WindowsInfo :: muestra perfiles y bindings lwin*/rwin* detectados
-backend.exe -WindowsFix  :: agrega los bindings que falten (juego cerrado)
+backend.exe -NoInput     :: modo de prueba; no inyecta teclas
+backend.exe -WindowsInfo :: muestra perfiles y bindings (ventanillas + encoders)
+backend.exe -WindowsFix  :: agrega bindings de ventanillas/encoders (juego cerrado)
 ```
 
 Solucion de problemas comunes: `docs/INSTALACION.md#problemas-comunes`.
 
 ## Compilar desde fuente
 
-- Backend: `csc.exe` de .NET Framework, sin dependencias (`docs/DESARROLLO.md`).
-- Instalador: Inno Setup 6 (`installer/truckersim-ajazz.iss`).
+- Backend Windows: `csc.exe` de .NET Framework, sin dependencias
+  (`ports/windows/README.md`).
+- Backend macOS: `swiftc` en macOS (`ports/macos/README.md`).
+- Instalador Windows: Inno Setup 6 (`installer/truckersim-ajazz.iss`).
+- Instalador macOS: `installer/macos/build-macos.sh` (ZIP y `.pkg`).
+- Port Linux/OpenDeck: `ports/linux-opendeck/` (puente Wine/Proton).
 
 ## Estructura del repo
 
 ```text
-plugins/com.hsgaming.scsmon.sdPlugin/  Plugin (fuentes: backend.cs, manifest, PI, PNGs)
+ports/                                 Un port por plataforma
+â”œâ”€ windows/                            Backend C# + build.ps1
+â”œâ”€ macos/                              Backend Swift + build.sh
+â””â”€ linux-opendeck/                     IntegraciÃ³n OpenDeck (Wine/Proton)
+plugins/com.hsgaming.scsmon.sdPlugin/  Recursos compartidos: manifest, PI, PNGs
 automatizacion/                        Watcher gaming + lanzador manual
-installer/                             Script Inno Setup
-docs/                                  Manuales + imagenes
-dll/                                   (vacío en git: colocar scs-telemetry.dll aqui para el instalador)
+installer/                             Inno Setup + empaquetado macOS
+docs/                                  Manuales, licencias + imagenes
+dll/                                   (vacÃ­o en git: colocar scs-telemetry.dll aqui para el instalador)
+fps/                                   Fuentes y binario del medidor de FPS (Vitals, sin integrar)
 ```
 
-## Estado de desarrollo (2026-10-27)
+Los binarios generados (`backend.exe`, instaladores, DLL/dylib de telemetria)
+no se versionan. La excepcion es el backend macOS ya compilado que se usa para
+el paquete beta.
+
+La matriz de ports y la auditorÃ­a de mejoras estÃ¡n en
+[`ports/README.md`](ports/README.md) y [`ports/MEJORAS.md`](ports/MEJORAS.md).
+
+## Estado de desarrollo (2026-11-04)
 
 > Bitacora interna para no perder contexto entre sesiones. Actualizar esta
 > seccion al cerrar cada bloque de trabajo.
+
+### Empaquetado (2026-10-31)
+
+- **Windows 1.1**: `installer/Output/TruckerSim-Ajazz-Setup-1.1.exe`
+  compilado con Inno Setup 6.7.3. Incluye `backend.exe`, las 32 acciones,
+  `scs-telemetry.dll` y desinstalador.
+- **Windows 1.2 (en curso)**: `backend.exe` compilado y desplegado con las 35
+  acciones (incluye encoders). El instalador 1.2 queda pendiente de regenerar
+  con Inno Setup (`ISCC.exe` no esta instalado en este equipo).
+- **macOS 1.0-beta**: `installer/Output/TruckerSim-Ajazz-macOS-1.0-beta.zip`.
+  Incluye `Instalar Trucker Simulator.command`, el backend Swift x86_64, 21
+  acciones y `libscs-telemetry.dylib`. El `.pkg` se genera en macOS con
+  `installer/macos/build-macos.sh`.
+- Hashes: `installer/Output/SHA256SUMS.txt`.
+- Guia de compilacion: `installer/README.md`.
+- La beta macOS no tiene paridad con Windows 1.1: faltan las 11 acciones
+  nuevas y las ventanillas automaticas. El backend Swift sigue en P3.
 
 ### Punto de reanudacion (2026-10-27)
 
@@ -149,27 +222,31 @@ dll/                                   (vacío en git: colocar scs-telemetry.dll
   alerta, crucero `OK`/`FUERA`, motor, PSI y freno de estacionamiento. Las
   ventanillas ya estaban confirmadas con los botones fisicos. No quedan
   pendientes de P0, P1.1-P1.2 ni P2.
-- **Siguiente bloque**: decidir P3 (macOS/knobs/bindings configurables) o
-  preparar el release; P1.3-P1.5 siguen en backlog y no urgen con **0,80 %**
-  de CPU conduciendo.
+- **Siguiente bloque**: opcional P1.5 (logging), pruebas automatizadas o
+  preparar el release.
 - Compilar/desplegar: ver "Protocolo de trabajo". El binario no se commitea.
 - Docs actualizados: `README.md`, `CHANGELOG.md`, `HISTORIAL.md` y
   `docs/INSTALACION.md` (ventanillas automaticas, sin asignacion manual).
 
 ### Situacion del arbol
 
-- Ultimo commit / release: `363f498` (v1.0, 2026-10-14).
-- **Sin commit**: `backend.cs`, `manifest.json`, `README.md`, `CHANGELOG.md`,
-  `HISTORIAL.md` y `docs/INSTALACION.md`. El manifiesto local define
-  **32 acciones**; la v1.0 publicada tiene 21.
-- **Sin seguimiento**: `backend.swift`, binario macOS `backend`, PNGs nuevos
-  `pk-*`, `fps/` y `plugins/com.hsgaming.vitals.sdPlugin/`.
+- Ultimo commit: `c6e20ff` (v1.1 local, 2026-10-29). Release publica v1.0:
+  `363f498` (2026-10-14).
+- `manifest.json` esta en **1.3.0** con **34 acciones** (27 Keypad + 11 nuevos + 3 Encoder);
+  la v1.0 publicada tenia 21. El instalador Windows 1.2 queda pendiente de
+  regenerar con Inno Setup; el plugin 1.2 ya esta compilado y desplegado.
+- Backend macOS `backend` y `backend.swift` estan versionados. El binario es
+  x86_64 y cubre **21 acciones**; el paquete macOS se distribuye como
+  `1.0-beta` hasta completar el port.
+- **Sin seguimiento**: `fps/` y `plugins/com.hsgaming.vitals.sdPlugin/`
+  (plugin de sensores del Mac, ajeno al plugin principal).
 - `backend.exe` del repo y el instalado en
   `%APPDATA%\HotSpot\StreamDock\plugins\com.hsgaming.scsmon.sdPlugin\` son
-  identicos (SHA256 `2CEB60...`, build con ventanillas mantenidas).
-- Documentacion: la v1.0 publicada documenta 21 acciones; el arbol local
-  define 32 y `CHANGELOG.md` tiene una seccion `[Sin publicar]` con P0, P1 y
-  P2.
+  identicos (SHA256 `539395801EE230AD9D63F83F0C04DF251FAEB4E496EA248F0E5F1F0EE3344657`,
+  build 1.2 con ventanillas, encoders, WebSocket, FlashWatch y tiles mejorados).
+- Documentacion: `CHANGELOG.md` describe la 1.1 y `docs/INSTALACION.md` cubre
+  Windows y macOS. El arbol de trabajo puede tener cambios locales ajenos a
+  esta release (por ejemplo `automatizacion/Modo_Gaming_SCS.bat` eliminado).
 
 ### Acciones locales nuevas (11)
 
@@ -187,7 +264,7 @@ Sesion del 27/10/2026, PID `14148`, desde las 16:53 hasta las 20:51:
   `Bitmap`, `Graphics`, `Font`, `Brush` y `StringFormat`, y codifica PNG +
   base64.
 - `FlashWatch` mantiene un hilo propio leyendo el MMF cada 15 ms (~66
-  lecturas/s) durante toda la sesion.
+  lecturas/s) durante toda la sesion (antes de P1.4).
 - Tras P0 (21:09): binario nuevo desplegado, sin errores de render en el log.
   Medicion preliminar con el build P0 (PID `21308`): 5,06 s de CPU en 1,1 min
   (~7,7 % de un nucleo) y 39,7 MB de working set; sirve de base para P1.
@@ -254,10 +331,11 @@ Sesion del 27/10/2026, PID `14148`, desde las 16:53 hasta las 20:51:
    cambio (excepto animaciones de pulso).
 3. Evitar PNG/base64 cuando la imagen no cambio. Ya se compara el string final,
    pero se paga render + codificacion igualmente.
-4. `Ws.SendRaw` crea `RandomNumberGenerator`, `MemoryStream` y dos buffers por
-   mensaje. Reutilizar RNG y buffers (o mascarar sobre el buffer de salida).
-5. `FlashWatch`: abrir el MMF una sola vez y bajar el sondeo con el juego
-   pausado.
+4. [x] `Ws.SendRaw` crea `RandomNumberGenerator`, `MemoryStream` y dos buffers
+   por mensaje. Hecho 2026-11-04: RNG unico y buffers reutilizados; el payload
+   se enmascara por bloques sin copia completa del frame.
+5. [x] `FlashWatch`: reutiliza el visor del bucle principal y baja el sondeo
+   con el juego pausado (15/100/250 ms). Hecho 2026-11-04.
 6. Quitar/limitar `Log("ev rx")` y `Log("ev ...")` por evento: I/O en cada
    mensaje.
 7. Medir antes/despues con `Get-Process backend | Select CPU,WorkingSet64`.
@@ -281,9 +359,9 @@ Sesion del 27/10/2026, PID `14148`, desde las 16:53 hasta las 20:51:
 
 - **P0 - correctitud (bajo riesgo)**: COMPLETADO 2026-10-27 (ver historial).
 - **P1 - rendimiento**: P1.1 (render bajo demanda) y P1.2 (iconos
-  preescalados + tiles cacheados) COMPLETADOS 2026-10-27. P1.3 (`SendRaw`),
-  P1.4 (`FlashWatch`) y P1.5 (logging) quedan en backlog: con 0,97 % de CPU
-  en reposo y 0,80 % conduciendo su impacto esperado es marginal.
+  preescalados + tiles cacheados) COMPLETADOS 2026-10-27. P1.3 (`SendRaw`)
+  COMPLETADO 2026-11-04. P1.4 (`FlashWatch` compartido + sondeo adaptativo)
+  COMPLETADO 2026-11-04. P1.5 (logging) sigue en backlog.
 - **P2 - visualizacion**: COMPLETADO 2026-10-27 (RPM, gauges, ruta/danos,
   crucero y alertas). Desplegado, medido y validado en vivo (conduccion y
   dispositivo fisico); **0,97 %** de un nucleo en reposo y **0,80 %**
@@ -312,8 +390,11 @@ terminar cada punto:
    icono precomputados en base64. La cache de `Font`/`Brush` se descarta por
    medicion (el coste dominante es el rasterizado de texto). Medido:
    2,19 % -> 1,07 % de un nucleo.
-3. [ ] Menos allocaciones en `Ws.SendRaw` (backlog, impacto marginal en reposo).
-4. [ ] `FlashWatch` con MMF persistente y sondeo adaptativo (backlog).
+3. [x] Menos allocaciones en `Ws.SendRaw`: buffers reutilizados, mascara por
+   bloques y sin copia completa del frame. Validado con tramas de 5 B, 1 KB y
+   100 KB; benchmark de 500x30 KB: 132 ms -> 102 ms.
+4. [x] `FlashWatch` con MMF compartido y sondeo adaptativo: 15 ms activo,
+   100 ms en pausa, 250 ms sin juego. Mantiene el latch de 1,5 s.
 5. [ ] Reducir logging por evento (backlog).
 6. [x] Medir CPU/working set antes y despues de cada punto.
 
@@ -343,7 +424,7 @@ valores coincidentes nunca compartan una clave.
    18 pt mide 63 px y un anillo de 270 grados obliga a bajarlo a menos de
    15 pt o a recortarlo. La barra conserva el numero grande, muestra el
    avance con el color de zona y marca el ultimo 10 % en rojo. "CAMBIA" pasa
-   de 13 a 11 pt porque a 13 pt medía 77 px y se salía del tile. `StateKey`
+   de 13 a 11 pt porque a 13 pt medÃ­a 77 px y se salÃ­a del tile. `StateKey`
    incluye `rpmMax` para invalidar la barra al cambiar de motor.
 2. [x] Gauges dinamicos: anillo de 270 grados con progreso, zona de peligro y
    marca de umbral. Agua 40-120 C (umbral `waterWarn`), aceite 40-150 C
@@ -405,7 +486,7 @@ de 60 s dio 1,07 %. Log sin errores.
 ```bat
 C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /nologo /optimize /target:exe ^
   /out:plugins\com.hsgaming.scsmon.sdPlugin\backend.exe ^
-  plugins\com.hsgaming.scsmon.sdPlugin\backend.cs /reference:System.Drawing.dll
+  ports\windows\src\backend.cs /reference:System.Drawing.dll
 ```
 
 Despliegue manual (cerrar antes StreamDock y el backend):
@@ -460,7 +541,7 @@ copy /Y plugins\com.hsgaming.scsmon.sdPlugin\manifest.json "%INST%\manifest.json
   `pressDownTimes` en vez de solo marcarlo invisible. Evita crecimiento
   indefinido al cambiar de perfil/pagina.
 - **2026-10-27 - P0 verificado y desplegado**: compila con `csc /optimize`,
-  `-Test` renderiza las 32 acciones sin errores, umbral de `checkengine`
+  `-Test` renderiza las 34 acciones sin errores, umbral de `checkengine`
   probado con 4,9 % (negro) y 5,1 % (enciende), y luego con 4,0 % (negro),
   5,0 %/6,0 % (enciende), motor apagado e inactivo (negro). `backend.exe` y
   `manifest.json` copiados a la carpeta instalada (SHA256

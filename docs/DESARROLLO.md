@@ -1,6 +1,6 @@
 # Desarrollo
 
-## Backend (`backend.cs` → `backend.exe`)
+## Backend Windows (`ports/windows/src/backend.cs` → `backend.exe`)
 
 C# sin dependencias (solo .NET Framework + `System.Drawing`). Compila con el
 `csc` del sistema:
@@ -8,8 +8,12 @@ C# sin dependencias (solo .NET Framework + `System.Drawing`). Compila con el
 ```bat
 C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /nologo /optimize /target:exe ^
   /out:plugins\com.hsgaming.scsmon.sdPlugin\backend.exe ^
-  plugins\com.hsgaming.scsmon.sdPlugin\backend.cs /reference:System.Drawing.dll
+  ports\windows\src\backend.cs /reference:System.Drawing.dll
 ```
+
+El código fuente de cada port vive en `ports/windows/src/` y
+`ports/macos/src/`. Los recursos compartidos (manifest, PI, PNGs) siguen en
+`plugins/com.hsgaming.scsmon.sdPlugin/`.
 
 - Fuente de datos: MMF `Local\SCSTelemetry` (offsets REV12 documentados en
   `backend.cs` y en `HISTORIAL.md`).

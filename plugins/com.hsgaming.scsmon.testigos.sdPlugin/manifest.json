@@ -1,0 +1,211 @@
+{
+  "Actions": [
+    {
+      "Name": "Autonomia (combustible)",
+      "UUID": "com.hsgaming.scsmon.range",
+      "Icon": "tile-fuel",
+      "States": [
+        {
+          "Image": "tile-fuel",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Combustible (nivel)",
+      "UUID": "com.hsgaming.scsmon.fuel",
+      "Icon": "tile-fuel",
+      "States": [
+        {
+          "Image": "tile-fuel",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Consumo (L/100km)",
+      "UUID": "com.hsgaming.scsmon.cons",
+      "Icon": "tile-cons",
+      "States": [
+        {
+          "Image": "tile-cons",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Danos (camion/trailer/carga)",
+      "UUID": "com.hsgaming.scsmon.damage",
+      "Icon": "tile-damage",
+      "States": [
+        {
+          "Image": "tile-damage",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/lights.html"
+    },
+    {
+      "Name": "Limite de via",
+      "UUID": "com.hsgaming.scsmon.limit",
+      "Icon": "tile-limit",
+      "States": [
+        {
+          "Image": "tile-limit",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Marcha (cambio)",
+      "UUID": "com.hsgaming.scsmon.gear",
+      "Icon": "tile-gear",
+      "States": [
+        {
+          "Image": "tile-gear",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Presion del aire",
+      "UUID": "com.hsgaming.scsmon.airpressure",
+      "Icon": "tile-air",
+      "States": [
+        {
+          "Image": "tile-air",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "RPM (cambio de marcha)",
+      "UUID": "com.hsgaming.scsmon.rpm",
+      "Icon": "tile-rpm",
+      "States": [
+        {
+          "Image": "tile-rpm",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Ruta (recorrida/faltante)",
+      "UUID": "com.hsgaming.scsmon.route",
+      "Icon": "tile-route",
+      "States": [
+        {
+          "Image": "tile-route",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Temperatura del aceite",
+      "UUID": "com.hsgaming.scsmon.oiltemp",
+      "Icon": "tile-oil",
+      "States": [
+        {
+          "Image": "tile-oil",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Temperatura del camion",
+      "UUID": "com.hsgaming.scsmon.watertemp",
+      "Icon": "tile-temp",
+      "States": [
+        {
+          "Image": "tile-temp",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    },
+    {
+      "Name": "Velocidad",
+      "UUID": "com.hsgaming.scsmon.speed",
+      "Icon": "tile-speed",
+      "States": [
+        {
+          "Image": "tile-speed",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Information"
+      ],
+      "PropertyInspectorPath": "propertyinspector/fixed.html"
+    }
+  ],
+  "Author": "HS-Gaming",
+  "CodePath": "backend.exe",
+  "Category": "Trucker Simulator Testigos",
+  "CategoryIcon": "icon",
+  "Description": "Testigos de telemetria ATS/ETS2 para Ajazz/StreamDock",
+  "Icon": "icon",
+  "Name": "Trucker Simulator Testigos",
+  "Version": "1.3.0",
+  "SDKVersion": 2,
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ]
+}

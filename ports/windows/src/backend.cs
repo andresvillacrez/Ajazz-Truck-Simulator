@@ -2,6 +2,7 @@
 // Sin PowerShell, sin dependencias: TCP crudo + WebSocket RFC6455 manual,
 // MemoryMappedFile, System.Drawing. Offsets: scs-telemetry-common.hpp REV12.
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -74,10 +75,10 @@ class SCSMon {
         PressScanEx(scan, false, false, false, false);
     }
     static readonly object pressHoldLock = new object();
-    static void PressScanEx(byte scan, bool ext, bool alt, bool ctrl, bool shift) {
+    static void PressScanEx(byte scan, bool ext, bool alt, bool ctrl, bool shift, bool quiet = false) {
         bool downCtrl = false, downShift = false, downAlt = false;
         try {
-            string fg = ForegroundName();
+            string fg = quiet ? null : ForegroundName();
             int n = 0;
             if (ctrl) { n += SendScan(0x1D, false, false); downCtrl = true; }
             if (shift) { n += SendScan(0x2A, false, false); downShift = true; }
@@ -86,7 +87,7 @@ class SCSMon {
             n += SendScan(scan, ext, false);
             n += SendScan(scan, ext, true);
             if (ctrl || shift || alt) Thread.Sleep(25);
-            Log("tecla scan " + scan.ToString("X2") + (alt ? " +Alt" : "") + (ctrl ? " +Ctrl" : "") + (shift ? " +Shift" : "") + " -> foco:" + fg + " insertados=" + n);
+            if (!quiet) Log("tecla scan " + scan.ToString("X2") + (alt ? " +Alt" : "") + (ctrl ? " +Ctrl" : "") + (shift ? " +Shift" : "") + " -> foco:" + fg + " insertados=" + n);
         } catch (Exception ex) { Log("tecla: " + ex.Message); }
         finally {
             try {
@@ -134,22 +135,28 @@ class SCSMon {
             }
         });
     }
-    static void PressKey(ushort vk) {
+    static void PressKey(ushort vk, bool quiet = false) {
         try {
             uint sc = MapVirtualKey(vk, 0);
+            // Volume/mute son teclas extendidas (E0 + scan); sin este flag
+            // SendInput puede interpretarlas como una tecla normal.
+            bool ext = vk == 0xAD || vk == 0xAE || vk == 0xAF;
             KIn[] d = new KIn[2];
-            d[0].type = 1; d[0].wVk = vk; d[0].wScan = (ushort)sc;
-            d[1].type = 1; d[1].wVk = vk; d[1].wScan = (ushort)sc; d[1].dwFlags = 0x0002;
-            string fg = "?";
-            try {
-                IntPtr h = GetForegroundWindow();
-                uint pid;
-                GetWindowThreadProcessId(h, out pid);
-                fg = System.Diagnostics.Process.GetProcessById((int)pid).ProcessName;
-            } catch { }
-            Log("tecla " + vk.ToString("X2") + " -> foco:" + fg);
+            d[0].type = 1; d[0].wVk = vk; d[0].wScan = (ushort)sc; d[0].dwFlags = ext ? 0x0001u : 0u;
+            d[1].type = 1; d[1].wVk = vk; d[1].wScan = (ushort)sc; d[1].dwFlags = (ext ? 0x0001u : 0u) | 0x0002u;
+            string fg = null;
+            if (!quiet) {
+                fg = "?";
+                try {
+                    IntPtr h = GetForegroundWindow();
+                    uint pid;
+                    GetWindowThreadProcessId(h, out pid);
+                    fg = System.Diagnostics.Process.GetProcessById((int)pid).ProcessName;
+                } catch { }
+                Log("tecla " + vk.ToString("X2") + " -> foco:" + fg);
+            }
             uint nIns = SendInput(2, d, Marshal.SizeOf(typeof(KIn)));
-            Log("tecla insertados=" + nIns);
+            if (!quiet) Log("tecla insertados=" + nIns);
         } catch (Exception ex) { Log("tecla: " + ex.Message); }
     }
     static void PressChar(char c) {
@@ -171,6 +178,7 @@ class SCSMon {
 
     static string plugDir, logFile;
     static readonly object logLock = new object();
+    static volatile bool wsDead;
     static void Log(string m) {
         lock (logLock) {
             try {
@@ -197,10 +205,25 @@ class SCSMon {
     }
     static readonly object winLock = new object();
     static readonly Dictionary<string, WinBind> winBinds = new Dictionary<string, WinBind>(StringComparer.OrdinalIgnoreCase);
-    static readonly string[] winActions = new string[] { "lwinclose", "lwinopen", "rwinclose", "rwinopen" };
+    // Ventanillas + controles de encoder. Si el perfil no tiene tecla para
+    // una accion, el plugin agrega una tecla libre (nunca pisa bindings).
+    static readonly string[] bindActions = new string[] {
+        "lwinclose", "lwinopen", "rwinclose", "rwinopen",
+        "cruiectrlinc", "cruiectrldec", "retarderup", "retarderdown",
+        "liftaxle", "liftaxlet", "cruiseinc", "cruisedec",
+        "retarderauto", "frontsuspup", "frontsuspdwn", "rearsuspup",
+        "rearsuspdwn", "suspreset",
+        "geardrive", "gear0", "gearreverse"
+    };
+    static readonly HashSet<string> boundActions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+        "liftaxle", "liftaxlet", "cruiseinc", "cruisedec",
+        "retarderauto", "frontsuspup", "frontsuspdwn", "rearsuspup",
+        "rearsuspdwn", "suspreset",
+        "geardrive", "gear0", "gearreverse"
+    };
     static readonly string[] winKeyCandidates = new string[] {
-        "f8", "comma", "minus", "bslash", "slash", "period", "apostrophe",
-        "semicolon", "lbracket", "rbracket", "equal", "grave"
+        "comma", "minus", "bslash", "j", "b", "f8", "f6", "f7", "f9", "f10", "apps",
+        "slash", "period", "apostrophe", "semicolon", "lbracket", "rbracket", "equal", "grave"
     };
     static readonly Dictionary<string, KeyInfo> keyInfo = new Dictionary<string, KeyInfo>(StringComparer.OrdinalIgnoreCase) {
         { "esc", new KeyInfo(0x01, false) }, { "key1", new KeyInfo(0x02, false) }, { "key2", new KeyInfo(0x03, false) },
@@ -311,15 +334,15 @@ class SCSMon {
         if (string.IsNullOrEmpty(path) || !File.Exists(path)) return;
         string text;
         try { text = File.ReadAllText(path, Encoding.UTF8); } catch { return; }
-        foreach (string action in winActions) {
+        foreach (string action in bindActions) {
             string expr = GetMixExpr(text, action);
             WinBind b = expr == null ? null : ParseWinBinding(action, expr);
             if (b != null) {
                 SetWinBind(b);
-                if (verbose) Log("ventanas: " + action + " -> " + b.Key + (b.Alt ? " +Alt" : "") + (b.Ctrl ? " +Ctrl" : "") + (b.Shift ? " +Shift" : ""));
+                if (verbose) Log("controles: " + action + " -> " + b.Key + (b.Alt ? " +Alt" : "") + (b.Ctrl ? " +Ctrl" : "") + (b.Shift ? " +Shift" : ""));
             } else {
                 RemoveWinBind(action);
-                if (verbose) Log("ventanas: " + action + " sin binding de teclado");
+                if (verbose) Log("controles: " + action + " sin binding de teclado");
             }
         }
     }
@@ -456,7 +479,7 @@ class SCSMon {
         catch (Exception ex) { if (verbose) Log("ventanas: leer " + path + ": " + ex.Message); return false; }
         bool touched = false;
         List<string> patched = new List<string>();
-        foreach (string action in winActions) {
+        foreach (string action in bindActions) {
             Match m = Regex.Match(text, @"(?m)^(\s*config_lines\[\d+\]:\s*""mix\s+" + Regex.Escape(action) + @"\s+`)([^`]*)(`"")", RegexOptions.IgnoreCase);
             if (!m.Success) continue;
             string expr = m.Groups[2].Value;
@@ -477,7 +500,7 @@ class SCSMon {
             }
         }
         if (IsGameRunning()) {
-            if (verbose) Log("ventanas: el juego arranco durante el parcheo; no se escribe " + path);
+            if (verbose) Log("controles: el juego arranco durante el parcheo; no se escribe " + path);
             return false;
         }
         string bak = path + ".hs-window-backup";
@@ -488,7 +511,7 @@ class SCSMon {
             File.WriteAllText(tmp, text, new UTF8Encoding(false));
             File.Copy(tmp, path, true);
             File.Delete(tmp);
-            if (verbose) Log("ventanas: bindings agregados en " + path);
+            if (verbose) Log("controles: bindings agregados en " + path);
             return true;
         } catch (Exception ex) {
             Log("ventanas: escribir " + path + ": " + ex.Message);
@@ -526,8 +549,15 @@ class SCSMon {
         bool needLOpen = NeedsWindowKey(text, "lwinopen");
         bool needRClose = NeedsWindowKey(text, "rwinclose");
         bool needROpen = NeedsWindowKey(text, "rwinopen");
+        bool needCInc = NeedsWindowKey(text, "cruiectrlinc");
+        bool needCDec = NeedsWindowKey(text, "cruiectrldec");
+        bool needRUp = NeedsWindowKey(text, "retarderup");
+        bool needRDown = NeedsWindowKey(text, "retarderdown");
+        bool needBound = false;
+        foreach (string a in boundActions) if (NeedsWindowKey(text, a)) { needBound = true; break; }
         Dictionary<string, WinBind> auto = new Dictionary<string, WinBind>(StringComparer.OrdinalIgnoreCase);
-        if (!needLClose && !needLOpen && !needRClose && !needROpen) return auto;
+        if (!needLClose && !needLOpen && !needRClose && !needROpen &&
+            !needCInc && !needCDec && !needRUp && !needRDown && !needBound) return auto;
         int fi = 0;
         if (needLClose || needLOpen) {
             if (fi < free.Count) {
@@ -544,11 +574,38 @@ class SCSMon {
             if (fi < free.Count) auto["rwinopen"] = MakeWinBind("rwinopen", free[fi++], true);
             else if (verbose) Log("ventanas: sin tecla libre para abrir ventanilla derecha");
         }
+        if (needCInc) {
+            if (fi < free.Count) auto["cruiectrlinc"] = MakeWinBind("cruiectrlinc", free[fi++], false);
+            else if (verbose) Log("encoders: sin tecla libre para crucero +");
+        }
+        if (needCDec) {
+            if (fi < free.Count) auto["cruiectrldec"] = MakeWinBind("cruiectrldec", free[fi++], false);
+            else if (verbose) Log("encoders: sin tecla libre para crucero -");
+        }
+        if (needRUp) {
+            if (fi < free.Count) auto["retarderup"] = MakeWinBind("retarderup", free[fi++], false);
+            else if (verbose) Log("encoders: sin tecla libre para retarder +");
+        }
+        if (needRDown) {
+            if (fi < free.Count) auto["retarderdown"] = MakeWinBind("retarderdown", free[fi++], false);
+            else if (verbose) Log("encoders: sin tecla libre para retarder -");
+        }
+        List<string> freeAlt = new List<string>();
+        foreach (string k in winKeyCandidates) {
+            if (!Regex.IsMatch(text, @"modifier\(alt_only,\s*keyboard\." + k + @"\?0", RegexOptions.IgnoreCase))
+                freeAlt.Add(k);
+        }
+        int fia = 0;
+        foreach (string a in boundActions) {
+            if (!NeedsWindowKey(text, a)) continue;
+            if (fia < freeAlt.Count) auto[a] = MakeWinBind(a, freeAlt[fia++], true);
+            else if (verbose) Log("controles: sin tecla libre (Alt) para " + a);
+        }
         if (verbose) {
-            foreach (string a in winActions) {
+            foreach (string a in bindActions) {
                 WinBind b;
                 if (auto.TryGetValue(a, out b) && b != null)
-                    Log("ventanas: " + path + " -> " + a + " = " + b.Key + (b.Alt ? " +Alt" : ""));
+                    Log("controles: " + path + " -> " + a + " = " + b.Key + (b.Alt ? " +Alt" : ""));
             }
         }
         return auto;
@@ -559,7 +616,7 @@ class SCSMon {
             bool running = IsGameRunning();
             List<string> files = FindControlsFiles();
             if (files.Count == 0) {
-                if (verbose) Log("ventanas: no se encontro controls.sii");
+                if (verbose) Log("controles: no se encontro controls.sii");
                 return false;
             }
             List<string> targets = new List<string>();
@@ -570,7 +627,7 @@ class SCSMon {
             if (targets.Count == 0) targets = files;
 
             if (running) {
-                if (verbose) Log("ventanas: juego en ejecucion; no se modifica controls.sii");
+                if (verbose) Log("controles: juego en ejecucion; no se modifica controls.sii");
             } else {
                 foreach (string f in targets) {
                     Dictionary<string, WinBind> auto = BuildAutoWindowBinds(f, verbose);
@@ -582,7 +639,7 @@ class SCSMon {
             if (active == null) active = NewestControlsFile(targets);
             if (active == null) active = NewestControlsFile(files);
             if (active != null) {
-                if (verbose) Log("ventanas: perfil activo " + active);
+                if (verbose) Log("controles: perfil activo " + active);
                 LoadWindowBindings(active, verbose);
             }
         } catch (Exception ex) { Log("ventanas: " + ex.Message); }
@@ -600,7 +657,7 @@ class SCSMon {
             try {
                 if (!IsGameRunning()) {
                     bool changed = EnsureWindowBindings(false);
-                    if (changed) Log("ventanas: bindings aplicados; reinicia el juego si estaba abierto");
+                    if (changed) Log("controles: bindings aplicados; reinicia el juego si estaba abierto");
                 }
             } catch (Exception ex) { Log("ventanas-watch: " + ex.Message); }
             Thread.Sleep(15000);
@@ -748,7 +805,7 @@ class SCSMon {
         if (frac < 0) frac = 0;
         if (frac > 1) frac = 1;
         bool warn = s.fuelWarn || (s.active && frac < 0.12);
-        return R0(s.range) + "," + ((int)(60 * frac)) + "," + Bit(warn);
+        return R0(s.fuel) + "," + R0(s.range) + "," + ((int)(60 * frac)) + "," + Bit(warn);
     }
     static string DamageKey(Snap s) {
         return R0(s.truckDmg) + DmgCol(s.truckDmg) + "|" + R0(s.trailerDmg) + DmgCol(s.trailerDmg) + "|" + R0(s.cargoDmg) + DmgCol(s.cargoDmg);
@@ -793,13 +850,16 @@ class SCSMon {
             case "trailerattach": return p + Bit(s.trailerAttached) + (s.trailerAttached ? Tick100() : "");
             case "emergencybrake": return p + Bit(s.park) + (s.park ? Tick100() : "");
             case "cruise": return p + Kmh(s.cruise) + Bit(s.cruise != null && s.cruise > 0.5) + Bit(s.cruiseOn) + (s.cruiseOn ? Tick100() : "");
-            case "hazbtn": return p + Bit(s.hazard) + Bit(s.blinkL) + Bit(s.blinkR);
+            case "cruiseenc": return p + Kmh(s.cruise) + Bit(s.cruiseOn);
+            case "retarderenc": return p + Bit(s.motorBrake);
+            case "volumeenc": return p + "volume";
+            case "hazbtn": return p + Bit(s.hazard) + Bit(s.blinkL) + Bit(s.blinkR) + (s.hazard ? Tick100() : "");
             case "blinkLbtn": return p + Bit(s.blinkL);
             case "blinkRbtn": return p + Bit(s.blinkR);
             case "lightbtn": return p + Bit(s.lowB) + Bit(s.parking);
             case "highbtn": return p + Bit(HighShown(s));
             case "beaconbtn": return p + Bit(s.beacon) + (s.beacon ? Tick100() : "");
-            case "wiperbtn": return p + s.wipers + "," + wiperMode;
+            case "wiperbtn": return p + s.wipers + "," + wiperMode + (s.wipers != 0 ? Tick100() : "");
             case "lowB": return p + Bit(s.lowB);
             case "highB": return p + Bit(HighShown(s));
             case "blinkL": return p + Bit(s.blinkL);
@@ -808,6 +868,12 @@ class SCSMon {
             case "brake": return p + Bit(s.brake);
             case "park": return p + Bit(s.park) + (s.park ? Tick100() : "");
             case "engine": return p + Bit(s.engine);
+            case "camexterior": return p + Bit(selectedCamera == "camexterior") + (selectedCamera == "camexterior" ? Tick100() : "");
+            case "caminterior": return p + Bit(selectedCamera == "caminterior") + (selectedCamera == "caminterior" ? Tick100() : "");
+            case "camroof": return p + Bit(selectedCamera == "camroof") + (selectedCamera == "camroof" ? Tick100() : "");
+            case "geardrive": return p + Bit(s.gear != null && s.gear > 0) + (s.gear != null && s.gear > 0 ? Tick100() : "");
+            case "gear0": return p + Bit(s.gear != null && s.gear == 0) + (s.gear != null && s.gear == 0 ? Tick100() : "");
+            case "gearreverse": return p + Bit(s.gear != null && s.gear < 0) + (s.gear != null && s.gear < 0 ? Tick100() : "");
             case "turn": return p + Bit(s.hazard) + Bit(s.blinkL) + Bit(s.blinkR);
             case "beams": return p + Bit(HighShown(s)) + Bit(s.lowB) + Bit(s.parking);
             case "auto": return p + Bit(s.hazard) + Bit(s.blinkL) + Bit(s.blinkR) + Bit(s.brake) + Bit(HighShown(s)) + Bit(s.lowB) + Bit(s.parking) + Bit(s.park);
@@ -834,7 +900,57 @@ class SCSMon {
         {"green","Lime"},{"cyan","Cyan"},{"amber","Orange"},{"red","Red"},
         {"white","White"},{"yellow","Yellow"},{"blue","DodgerBlue"},{"purple","Purple"},{"pink","DeepPink"}
     };
-    static Bitmap NewBmp() { return new Bitmap(72, 72); }
+    static Bitmap NewBmp() { return new Bitmap(currentRenderSize, currentRenderSize); }
+    static Graphics NewGraphics(Bitmap bmp) {
+        var g = Graphics.FromImage(bmp);
+        float scale = currentRenderSize / 72f;
+        if (Math.Abs(scale - 1f) > 0.001f) {
+            g.ScaleTransform(scale, scale);
+            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+        }
+        return g;
+    }
+    static bool TryGetIcon(string key, out Image image) {
+        if (currentRenderSize > 72 && imgsBig.TryGetValue(key, out image)) return true;
+        return imgs.TryGetValue(key, out image);
+    }
+    static int ChooseRenderSize(string message) {
+        string name = GetS(message, "name", null);
+        int columns = 0, rows = 0;
+        int.TryParse(GetN(message, "columns", "0"), out columns);
+        int.TryParse(GetN(message, "rows", "0"), out rows);
+        if (!string.IsNullOrEmpty(name)) {
+            if (name.IndexOf("AKP03", StringComparison.OrdinalIgnoreCase) >= 0) return 144;
+            if (name.IndexOf("AKP153", StringComparison.OrdinalIgnoreCase) >= 0) return 96;
+            if (name.IndexOf("AKP05", StringComparison.OrdinalIgnoreCase) >= 0) return 144;
+        }
+        int keys = columns * rows;
+        if (keys > 0 && keys <= 6) return 144;
+        if (keys >= 15) return 96;
+        return 96;
+    }
+    static string BlackB64() {
+        string b64;
+        if (blackB64Sized.TryGetValue(currentRenderSize, out b64)) return b64;
+        using (var tile = NewBmp())
+        using (var g = NewGraphics(tile)) {
+            g.Clear(Color.Black);
+            b64 = B64(tile);
+        }
+        blackB64Sized[currentRenderSize] = b64;
+        return b64;
+    }
+    static string HazardB64(bool lit) {
+        var cache = lit ? hazOnSized : hazOffSized;
+        string b64;
+        if (cache.TryGetValue(currentRenderSize, out b64)) return b64;
+        b64 = BuildHaz(lit);
+        cache[currentRenderSize] = b64;
+        return b64;
+    }
     static string B64(Bitmap bmp) {
         using (var ms = new MemoryStream()) {
             bmp.Save(ms, ImageFormat.Png);
@@ -844,10 +960,16 @@ class SCSMon {
     static readonly Dictionary<string, Image> imgs = new Dictionary<string, Image>();     // 72x72
     static readonly Dictionary<string, Image> imgsBig = new Dictionary<string, Image>();  // original 144x144
     static readonly Dictionary<string, string> iconB64 = new Dictionary<string, string>();
+    static readonly Dictionary<string, string> iconB64Sized = new Dictionary<string, string>();
+    static readonly Dictionary<int, string> blackB64Sized = new Dictionary<int, string>();
+    static readonly Dictionary<int, string> hazOffSized = new Dictionary<int, string>();
+    static readonly Dictionary<int, string> hazOnSized = new Dictionary<int, string>();
+    static readonly Dictionary<string, int> deviceSizes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+    static int currentRenderSize = 72;
     static string blackB64;
     static string hazOffB64, hazOnB64;
     static void Preload() {
-        foreach (var n in new string[] { "left", "right", "hazard", "low", "high", "brake", "park", "beacon", "cruise", "wiper", "diff", "emergency-brake", "coupling", "parking-brake-1", "window-left-down", "window-left-up", "window-right-down", "window-right-up", "engine", "radio" })
+        foreach (var n in new string[] { "left", "right", "hazard", "low", "high", "brake", "park", "beacon", "cruise", "wiper", "diff", "emergency-brake", "coupling", "parking-brake-1", "window-left-down", "window-left-up", "window-right-down", "window-right-up", "engine", "radio", "retarder", "volume", "liftaxle", "liftaxlet", "cruiseinc", "cruisedec", "retarderauto", "frontsuspup", "frontsuspdwn", "rearsuspup", "rearsuspdwn", "suspreset", "camexterior", "caminterior", "camroof", "geardrive", "gearneutral", "gearreverse" })
             foreach (var suf in new string[] { "", "-c" }) {
                 string p = Path.Combine(plugDir, "pk-" + n + suf + ".png");
                 if (!File.Exists(p)) continue;
@@ -858,14 +980,14 @@ class SCSMon {
                     // Preescalado unico 144->72 con la interpolacion por defecto:
                     // mismo resultado que dibujar el original en cada frame.
                     var small = new Bitmap(72, 72);
-                    using (var g = Graphics.FromImage(small)) {
+                    using (var g = NewGraphics(small)) {
                         g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Default;
                         g.DrawImage(big, 0, 0, 72, 72);
                     }
                     imgs[key] = small;
                     // Tile de icono ya compuesto y codificado (RenderPack).
                     using (var tile = NewBmp())
-                    using (var g = Graphics.FromImage(tile)) {
+                    using (var g = NewGraphics(tile)) {
                         g.Clear(Color.Black);
                         g.DrawImage(big, 0, 0, 72, 72);
                         iconB64[key] = B64(tile);
@@ -873,23 +995,38 @@ class SCSMon {
                 } catch { }
             }
         using (var tile = NewBmp())
-        using (var g = Graphics.FromImage(tile)) {
+        using (var g = NewGraphics(tile)) {
             g.Clear(Color.Black);
             blackB64 = B64(tile);
         }
         hazOffB64 = BuildHaz(false);
         hazOnB64 = BuildHaz(true);
+        blackB64Sized[72] = blackB64;
+        hazOffSized[72] = hazOffB64;
+        hazOnSized[72] = hazOnB64;
     }
     static string RenderPack(string name, bool on) {
+        string key = on ? name + "-c" : name;
         string b64;
-        if (iconB64.TryGetValue(on ? name + "-c" : name, out b64)) return b64;
-        return blackB64;
+        if (currentRenderSize == 72 && iconB64.TryGetValue(key, out b64)) return b64;
+        string sizedKey = key + "|" + currentRenderSize;
+        if (iconB64Sized.TryGetValue(sizedKey, out b64)) return b64;
+        Image icon;
+        if (!TryGetIcon(key, out icon)) return BlackB64();
+        using (var tile = NewBmp())
+        using (var g = NewGraphics(tile)) {
+            g.Clear(Color.Black);
+            g.DrawImage(icon, 0, 0, 72, 72);
+            b64 = B64(tile);
+        }
+        iconB64Sized[sizedKey] = b64;
+        return b64;
     }
     static string RenderBig(string top, string label, string colorName, string sub) {
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             Color col = Color.FromName(colorName);
             var sf = CenterSF;
             using (var f1 = new Font("Arial", 20, FontStyle.Bold))
@@ -903,12 +1040,31 @@ class SCSMon {
             return B64(bmp);
         }
     }
+    static string RenderNoGame(string colorName) {
+        using (var bmp = NewBmp())
+        using (var g = NewGraphics(bmp)) {
+            g.Clear(Color.Black);
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+            var sf = CenterSF;
+            Color col = Color.FromName(colorName);
+            if (col.IsEmpty || col == Color.Black) col = Color.Lime;
+            using (var f1 = new Font("Arial", 16, FontStyle.Bold))
+            using (var f2 = new Font("Arial", 8, FontStyle.Bold))
+            using (var f3 = new Font("Arial", 7))
+            using (var br = new SolidBrush(col)) {
+                g.DrawString("--", f1, br, 36, 4, sf);
+                g.DrawString("Trucker Simulator", f2, Brushes.White, 36, 28, sf);
+                g.DrawString("sin juego", f3, Brushes.Gray, 36, 46, sf);
+            }
+            return B64(bmp);
+        }
+    }
     static string RenderSpeed(Snap s, string colorName) {
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             int cx = 36, cy = 38, r = 30;
             using (var penW = new Pen(Color.White, 3)) {
                 g.DrawArc(penW, cx - r, cy - r, r * 2, r * 2, 135, 270);
@@ -933,10 +1089,10 @@ class SCSMon {
     }
     static string RenderSpeedLimit(Snap s) {
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             var sf = CenterSF;
             double limitKmh = s.limit == null ? 0 : s.limit.Value * 3.6;
             double speedKmh = s.speed == null ? 0 : Math.Abs(s.speed.Value * 3.6);
@@ -960,10 +1116,10 @@ class SCSMon {
         if (warnFrac < 0) warnFrac = 0;
         if (warnFrac > 1) warnFrac = 1;
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             var sf = CenterSF;
             Color color = warning ? Color.Red : Color.Lime;
             const float cx = 36f, cy = 36f, r = 31f;
@@ -1015,9 +1171,9 @@ class SCSMon {
         }
         if (isR && gearTxt == "R") gearCol = "Red";
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             var sf = CenterSF;
             // Barra de 60x4: conserva el numero grande (18 pt) y muestra el
             // avance hacia el corte. El ultimo 10 % es la zona roja.
@@ -1050,43 +1206,73 @@ class SCSMon {
         }
     }
     static string RenderFuel(Snap s) {
+        bool known = s.active && s.fuel != null && s.fuelCap != null && s.fuelCap > 0;
+        double frac = known ? s.fuel.Value / s.fuelCap.Value : 0;
+        if (frac < 0) frac = 0;
+        if (frac > 1) frac = 1;
+        bool warn = known && (s.fuelWarn || frac < 0.12);
+        Color col = !known ? Color.Gray : (warn ? Color.Red : (frac < 0.25 ? Color.Orange : Color.Lime));
+        string pct = known ? Math.Round(frac * 100).ToString(CultureInfo.InvariantCulture) + "%" : "--";
+        string liters = s.fuel != null ? Math.Round(s.fuel.Value).ToString(CultureInfo.InvariantCulture) + " L" : "-- L";
+        string range = s.range != null ? Math.Round(s.range.Value).ToString(CultureInfo.InvariantCulture) + " km" : "-- km";
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             var sf = CenterSF;
-            using (var white = new SolidBrush(Color.White))
-            using (var pen = new Pen(Color.White, 2)) {
-                g.FillRectangle(white, 6, 11, 18, 26);
-                g.FillRectangle(white, 9, 6, 12, 5);
-                g.FillRectangle(white, 4, 37, 22, 4);
-                g.DrawLine(pen, 24, 20, 31, 20);
-                g.DrawLine(pen, 31, 20, 31, 34);
-                g.FillRectangle(white, 28, 32, 6, 8);
-                g.FillRectangle(Brushes.Black, 9, 16, 12, 9);
+            using (var fLabel = new Font("Arial", 6, FontStyle.Bold))
+            using (var fPct = new Font("Arial", pct.Length > 4 ? 19 : 22, FontStyle.Bold))
+            using (var fLit = new Font("Arial", 8, FontStyle.Bold))
+            using (var fRng = new Font("Arial", 6.5f))
+            using (var accent = new SolidBrush(col))
+            using (var gray = new SolidBrush(Color.FromArgb(150, 150, 150)))
+            using (var track = new SolidBrush(Color.FromArgb(38, 38, 38)))
+            using (var outline = new Pen(Color.FromArgb(90, 90, 90), 1)) {
+                g.DrawString("COMBUSTIBLE", fLabel, gray, 36, 1, sf);
+                g.DrawString(pct, fPct, accent, 36, 7, sf);
+                g.DrawString(liters, fLit, Brushes.White, 36, 35, sf);
+                g.DrawString(range, fRng, gray, 36, 46, sf);
+                const int bx = 6, by = 57, bw = 60, bh = 7;
+                g.FillRectangle(track, bx, by, bw, bh);
+                int fw = (int)Math.Round(bw * frac);
+                if (fw > 0) g.FillRectangle(accent, bx, by, fw, bh);
+                g.DrawRectangle(outline, bx, by, bw, bh);
+                using (var tick = new Pen(Color.FromArgb(120, 120, 120), 1))
+                    for (int i = 1; i < 4; i++) g.DrawLine(tick, bx + bw * i / 4, by, bx + bw * i / 4, by + bh);
             }
-            string rk = s.range != null ? Math.Round(s.range.Value).ToString() : "--";
-            using (var fN = new Font("Arial", 11, FontStyle.Bold))
-            using (var fU = new Font("Arial", 8)) {
-                g.DrawString(rk, fN, Brushes.White, 16, 44, sf);
-                g.DrawString("km", fU, Brushes.Gray, 16, 58, sf);
-            }
-            double frac = 0;
-            if (s.fuel != null && s.fuelCap != null && s.fuelCap > 0) frac = s.fuel.Value / s.fuelCap.Value;
-            if (frac < 0) frac = 0; if (frac > 1) frac = 1;
-            bool warn = s.fuelWarn || (s.active && frac < 0.12);
-            using (var fill = new SolidBrush(warn ? Color.Red : Color.Lime))
-            using (var bg = new SolidBrush(Color.FromArgb(35, 35, 35))) {
-                int bx = 50, bw = 10, by = 6, bh = 60;
-                g.FillRectangle(bg, bx, by, bw, bh);
-                int fh = (int)(bh * frac);
-                if (fh > 0) g.FillRectangle(fill, bx, by + bh - fh, bw, fh);
-                g.DrawRectangle(Pens.Gray, bx, by, bw, bh);
-                using (var divPen = new Pen(Color.White, 1))
-                    foreach (var q in new double[] { 0.25, 0.5, 0.75 }) {
-                        int dy = (int)(by + bh * (1 - q));
-                        g.DrawLine(divPen, bx, dy, bx + bw, dy);
-                    }
+            return B64(bmp);
+        }
+    }
+    static string RenderRange(Snap s, string colorName) {
+        bool known = s.active && s.range != null;
+        string t = known ? Math.Round(s.range.Value).ToString(CultureInfo.InvariantCulture) : "--";
+        Color col = Color.Gray;
+        if (known) {
+            col = Color.FromName(colorName);
+            if (s.range.Value < 100) col = Color.Red;
+            else if (s.range.Value < 250) col = Color.Orange;
+        }
+        float nsize = t.Length >= 5 ? 17f : (t.Length == 4 ? 20f : 24f);
+        using (var bmp = NewBmp())
+        using (var g = NewGraphics(bmp)) {
+            g.Clear(Color.Black);
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+            var sf = CenterSF;
+            using (var fLabel = new Font("Arial", 6, FontStyle.Bold))
+            using (var fN = new Font("Arial", nsize, FontStyle.Bold))
+            using (var fUnit = new Font("Arial", 8, FontStyle.Bold))
+            using (var accent = new SolidBrush(col))
+            using (var gray = new SolidBrush(Color.FromArgb(150, 150, 150)))
+            using (var road = new Pen(Color.FromArgb(65, 65, 65), 2f))
+            using (var dash = new Pen(col, 1.4f)) {
+                g.DrawString("AUTONOMIA", fLabel, gray, 36, 1, sf);
+                g.DrawString(t, fN, accent, 36, 6, sf);
+                g.DrawString("km", fUnit, Brushes.White, 36, 34, sf);
+                g.DrawLine(road, 4, 70, 29, 50);
+                g.DrawLine(road, 68, 70, 43, 50);
+                for (int y = 54; y <= 66; y += 4) g.DrawLine(dash, 36, y, 36, y + 1.5f);
             }
             return B64(bmp);
         }
@@ -1113,10 +1299,10 @@ class SCSMon {
     }
     static string RenderDamage(Snap s) {
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             var sf = CenterSF;
             using (var fP = new Font("Arial", 15, FontStyle.Bold))
             using (var fP100 = new Font("Arial", 12, FontStyle.Bold))
@@ -1154,9 +1340,9 @@ class SCSMon {
     }
     static string RenderLights(Snap s) {
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             var sf = CenterSF;
             using (var f = new Font("Arial", 10, FontStyle.Bold))
             using (var off = new SolidBrush(Color.FromArgb(70, 70, 70))) {
@@ -1181,13 +1367,13 @@ class SCSMon {
     }
     static string RenderCruise(Snap s) {
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             var sf = CenterSF;
             Image cruiseIcon;
-            if (imgs.TryGetValue("cruise", out cruiseIcon)) {
+            if (TryGetIcon("cruise", out cruiseIcon)) {
                 using (var ia = new ImageAttributes()) {
                     var cm = new ColorMatrix();
                     cm.Matrix33 = 0.32f;
@@ -1226,10 +1412,10 @@ class SCSMon {
     static string RenderCruiseButton(Snap s) {
         // Icono tenue con velocidad configurada visible y testigo verde de activación.
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
             Image cruiseIcon;
-            if (imgs.TryGetValue("cruise", out cruiseIcon)) {
+            if (TryGetIcon("cruise", out cruiseIcon)) {
                 using (var ia = new ImageAttributes()) {
                     var cm = new ColorMatrix();
                     cm.Matrix33 = 0.35f; // visible detras del numero
@@ -1248,14 +1434,22 @@ class SCSMon {
                 g.DrawString("CRUCERO", fLabel, Brushes.White, 36, 47, sf);
             }
             if (s.cruiseOn) {
-                float a = PulseAlpha();
-                using (var overlay = new SolidBrush(Color.FromArgb((int)(a * 220), PulseGreen)))
-                    g.FillEllipse(overlay, 56, 3, 12, 12);
+                Image onIcon;
+                if (TryGetIcon("cruise", out onIcon)) {
+                    float a = PulseAlpha();
+                    var cm = new ColorMatrix(new float[][] {
+                        new float[]{1,0,0,0,0}, new float[]{0,1,0,0,0}, new float[]{0,0,1,0,0},
+                        new float[]{0,0,0,a,0}, new float[]{0,0,0,0,1} });
+                    using (var ia = new ImageAttributes()) {
+                        ia.SetColorMatrix(cm);
+                        g.DrawImage(onIcon, new Rectangle(0, 0, 72, 72), 0, 0, onIcon.Width, onIcon.Height, GraphicsUnit.Pixel, ia);
+                    }
+                }
             }
             return B64(bmp);
         }
     }
-    static string RenderRoute(Snap s) {
+    static string RenderRoute(Snap s, string colorName) {
         if (!s.onJob || s.planned == null || s.routeD == null || s.planned <= 0)
             return RenderBig("--", "SIN VIAJE", "Gray", null);
         double remainingKm = s.routeD.Value / 1000.0;
@@ -1265,26 +1459,35 @@ class SCSMon {
         if (frac < 0) frac = 0;
         if (frac > 1) frac = 1;
         string eta = FmtETA(s.routeT);
+        string kmText = Math.Round(remainingKm).ToString(CultureInfo.InvariantCulture);
+        float nsize = kmText.Length >= 5 ? 17f : (kmText.Length == 4 ? 20f : 23f);
+        Color accentColor = Color.FromName(colorName);
+        if (accentColor.IsEmpty || accentColor == Color.Black) accentColor = Color.Cyan;
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             var sf = CenterSF;
-            using (var fL = new Font("Arial", 7))
-            using (var fN = new Font("Arial", 19, FontStyle.Bold))
-            using (var fE = new Font("Arial", 7, FontStyle.Bold))
-            using (var cy = new SolidBrush(Color.Cyan))
+            using (var fLabel = new Font("Arial", 6, FontStyle.Bold))
+            using (var fN = new Font("Arial", nsize, FontStyle.Bold))
+            using (var fSub = new Font("Arial", 7, FontStyle.Bold))
+            using (var fFoot = new Font("Arial", 6, FontStyle.Bold))
+            using (var accent = new SolidBrush(accentColor))
             using (var gray = new SolidBrush(Color.FromArgb(150, 150, 150)))
             using (var track = new SolidBrush(Color.FromArgb(45, 45, 45)))
-            using (var lime = new SolidBrush(Color.Lime)) {
-                g.DrawString("FALTAN km", fL, gray, 36, 1, sf);
-                g.DrawString(Math.Round(remainingKm).ToString(), fN, cy, 36, 8, sf);
-                g.DrawString("RESTAN " + eta, fE, Brushes.White, 36, 35, sf);
-                const int barX = 6, barY = 48, barW = 60, barH = 4;
+            using (var white = new SolidBrush(Color.White)) {
+                g.DrawString("RUTA", fLabel, gray, 36, 1, sf);
+                g.DrawString(kmText, fN, accent, 36, 7, sf);
+                g.DrawString("km restantes", fSub, Brushes.White, 36, 35, sf);
+                g.DrawString("LLEGADA " + eta, fSub, gray, 36, 44, sf);
+                const int barX = 6, barY = 54, barW = 60, barH = 5;
                 g.FillRectangle(track, barX, barY, barW, barH);
                 int fill = (int)Math.Round(barW * frac);
-                if (fill > 0) g.FillRectangle(lime, barX, barY, fill, barH);
-                g.DrawString(Math.Round(travelledKm) + " / " + Math.Round(plannedKm) + " km", fL, gray, 36, 56, sf);
+                if (fill > 0) g.FillRectangle(accent, barX, barY, fill, barH);
+                int marker = Math.Max(barX, Math.Min(barX + barW, barX + fill));
+                g.FillEllipse(white, marker - 2, barY - 1, 5, 7);
+                g.DrawString(Math.Round(travelledKm) + " / " + Math.Round(plannedKm) + " km", fFoot, gray, 36, 62, sf);
             }
             return B64(bmp);
         }
@@ -1292,9 +1495,9 @@ class SCSMon {
     static string BuildHaz(bool lit) {
         Image L, R;
         string ls = lit ? "left-c" : "left", rs = lit ? "right-c" : "right";
-        if (!imgsBig.TryGetValue(ls, out L) || !imgsBig.TryGetValue(rs, out R)) return blackB64;
+        if (!imgsBig.TryGetValue(ls, out L) || !imgsBig.TryGetValue(rs, out R)) return BlackB64();
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
             g.DrawImage(L, 2, 12, 32, 48);
             g.DrawImage(R, 38, 12, 32, 48);
@@ -1302,119 +1505,45 @@ class SCSMon {
         }
     }
     static string RenderHazBtn(Snap s) {
-        bool lit = s.hazard && (s.blinkL || s.blinkR);
-        return lit ? hazOnB64 : hazOffB64;
+        return RenderPulseIcon("hazard", "hazard-c", s.hazard);
     }
-    static string RenderBeacon(Snap s) {
+    static string RenderPulseIcon(string baseName, string onName, bool on) {
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
-            Image b, c;
-            bool hasB = imgs.TryGetValue("beacon", out b);
-            bool hasC = imgs.TryGetValue("beacon-c", out c);
-            if (hasB) g.DrawImage(b, 0, 0, 72, 72);
-            if (s.beacon && hasC) {
-                float a = PulseAlpha();
-                var cm = new ColorMatrix(new float[][] {
-                    new float[]{1,0,0,0,0}, new float[]{0,1,0,0,0}, new float[]{0,0,1,0,0},
-                    new float[]{0,0,0,a,0}, new float[]{0,0,0,0,1} });
-                using (var ia = new ImageAttributes()) {
-                    ia.SetColorMatrix(cm);
-                    g.DrawImage(c, new Rectangle(0, 0, 72, 72), 0, 0, c.Width, c.Height, GraphicsUnit.Pixel, ia);
+            Image baseIcon;
+            if (TryGetIcon(baseName, out baseIcon)) g.DrawImage(baseIcon, 0, 0, 72, 72);
+            if (on) {
+                Image onIcon;
+                if (TryGetIcon(onName, out onIcon)) {
+                    float a = PulseAlpha();
+                    var cm = new ColorMatrix(new float[][] {
+                        new float[]{1,0,0,0,0}, new float[]{0,1,0,0,0}, new float[]{0,0,1,0,0},
+                        new float[]{0,0,0,a,0}, new float[]{0,0,0,0,1} });
+                    using (var ia = new ImageAttributes()) {
+                        ia.SetColorMatrix(cm);
+                        g.DrawImage(onIcon, new Rectangle(0, 0, 72, 72), 0, 0, onIcon.Width, onIcon.Height, GraphicsUnit.Pixel, ia);
+                    }
                 }
             }
             return B64(bmp);
         }
     }
+    static string RenderBeacon(Snap s) {
+        return RenderPulseIcon("beacon", "beacon-c", s.beacon);
+    }
     static string RenderWipers(Snap s) {
-        using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
-            g.Clear(Color.Black);
-            Image icon;
-            int mode = wiperMode;
-            if (s.wipers == 0) mode = 0;
-            else if (mode == 0) mode = 1;
-            string iconName = mode > 0 ? "wiper-c" : "wiper";
-            if (imgsBig.TryGetValue(iconName, out icon)) g.DrawImage(icon, 0, 0, 44, 44);
-            if (mode > 0) {
-                string state = mode == 1 ? "A" : mode.ToString();
-                using (var f = new Font("Arial", 24, FontStyle.Bold))
-                    g.DrawString(state, f, Brushes.White, 45, 20);
-            }
-            return B64(bmp);
-        }
+        bool on = s.active && s.wipers != 0;
+        return RenderPulseIcon("wiper", "wiper-c", on);
     }
     static string RenderDiffLock(Snap s) {
-        using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
-            g.Clear(Color.Black);
-            Image icon;
-            string key = s.diffLock ? "diff-c" : "diff";
-            if (!imgs.TryGetValue(key, out icon)) imgs.TryGetValue("diff", out icon);
-            if (icon != null) {
-                if (s.diffLock) {
-                    float alpha = PulseAlpha();
-                    var matrix = new ColorMatrix(new float[][] {
-                        new float[]{1,0,0,0,0}, new float[]{0,1,0,0,0}, new float[]{0,0,1,0,0},
-                        new float[]{0,0,0,alpha,0}, new float[]{0,0,0,0,1} });
-                    using (var ia = new ImageAttributes()) {
-                        ia.SetColorMatrix(matrix);
-                        g.DrawImage(icon, new Rectangle(0, 0, 72, 72), 0, 0, icon.Width, icon.Height, GraphicsUnit.Pixel, ia);
-                    }
-                    using (var orange = new SolidBrush(Color.FromArgb((int)(alpha * 210), PulseAmber)))
-                        g.FillEllipse(orange, 56, 4, 12, 12);
-                } else g.DrawImage(icon, 0, 0, 72, 72);
-            }
-            return B64(bmp);
-        }
+        return RenderPulseIcon("diff", "diff-c", s.diffLock);
     }
     static string RenderTrailerAttach(Snap s) {
-        using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
-            g.Clear(Color.Black);
-            Image icon;
-            string key = s.trailerAttached ? "coupling-c" : "coupling";
-            if (!imgs.TryGetValue(key, out icon)) imgs.TryGetValue("coupling", out icon);
-            if (icon != null) {
-                if (s.trailerAttached) {
-                    float alpha = PulseAlpha();
-                    var matrix = new ColorMatrix(new float[][] {
-                        new float[]{1,0,0,0,0}, new float[]{0,1,0,0,0}, new float[]{0,0,1,0,0},
-                        new float[]{0,0,0,alpha,0}, new float[]{0,0,0,0,1} });
-                    using (var ia = new ImageAttributes()) {
-                        ia.SetColorMatrix(matrix);
-                        g.DrawImage(icon, new Rectangle(0, 0, 72, 72), 0, 0, icon.Width, icon.Height, GraphicsUnit.Pixel, ia);
-                    }
-                    using (var green = new SolidBrush(Color.FromArgb((int)(alpha * 210), PulseGreen)))
-                        g.FillEllipse(green, 56, 4, 12, 12);
-                } else g.DrawImage(icon, 0, 0, 72, 72);
-            }
-            return B64(bmp);
-        }
+        return RenderPulseIcon("coupling", "coupling-c", s.trailerAttached);
     }
     static string RenderParkingBrake(Snap s) {
-        using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
-            g.Clear(Color.Black);
-            Image icon;
-            string key = s.park ? "parking-brake-1-c" : "parking-brake-1";
-            if (!imgs.TryGetValue(key, out icon)) imgs.TryGetValue("parking-brake-1", out icon);
-            if (icon != null) {
-                if (s.park) {
-                    float alpha = PulseAlpha();
-                    var matrix = new ColorMatrix(new float[][] {
-                        new float[]{1,0,0,0,0}, new float[]{0,1,0,0,0}, new float[]{0,0,1,0,0},
-                        new float[]{0,0,0,alpha,0}, new float[]{0,0,0,0,1} });
-                    using (var ia = new ImageAttributes()) {
-                        ia.SetColorMatrix(matrix);
-                        g.DrawImage(icon, new Rectangle(0, 0, 72, 72), 0, 0, icon.Width, icon.Height, GraphicsUnit.Pixel, ia);
-                    }
-                    using (var red = new SolidBrush(Color.FromArgb((int)(alpha * 210), PulseRed)))
-                        g.FillEllipse(red, 56, 4, 12, 12);
-                } else g.DrawImage(icon, 0, 0, 72, 72);
-            }
-            return B64(bmp);
-        }
+        return RenderPulseIcon("parking-brake-1", "parking-brake-1-c", s.park);
     }
     static bool windowLeftOpen = false;
     static bool windowRightOpen = false;
@@ -1428,16 +1557,17 @@ class SCSMon {
 
     static string RenderWindowIcon(string iconName, bool isOpen) {
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
             Image icon;
-            if (imgs.TryGetValue(iconName, out icon)) {
+            if (TryGetIcon(iconName, out icon)) {
                 if (isOpen) {
+                    float a = PulseAlpha();
                     var matrixCyan = new ColorMatrix(new float[][] {
                         new float[]{0,0,0,0,0},
                         new float[]{0,1,0,0,0},
                         new float[]{0,0,1,0,0},
-                        new float[]{0,0,0,1,0},
+                        new float[]{0,0,0,a,0},
                         new float[]{0,0,0,0,1} });
                     using (var ia = new ImageAttributes()) {
                         ia.SetColorMatrix(matrixCyan);
@@ -1452,15 +1582,27 @@ class SCSMon {
     }
 
     static bool radioOn = false;
+    static string selectedCamera = "caminterior";
+    static string CameraStateFile() { return Path.Combine(plugDir, "scsmon-camera.txt"); }
+    static void LoadSelectedCamera() {
+        try {
+            string v = File.ReadAllText(CameraStateFile()).Trim();
+            if (v == "camexterior" || v == "caminterior" || v == "camroof") selectedCamera = v;
+        } catch { }
+        if (selectedCamera == null) selectedCamera = "caminterior";
+    }
+    static void SaveSelectedCamera() {
+        try { File.WriteAllText(CameraStateFile(), selectedCamera ?? "caminterior", new UTF8Encoding(false)); } catch { }
+    }
 
     static string RenderEngineState(Snap s) {
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
             Image icon;
             bool isOn = s.active && s.engine;
             string key = isOn ? "engine-c" : "engine";
-            if (!imgs.TryGetValue(key, out icon)) imgs.TryGetValue("engine", out icon);
+            if (!TryGetIcon(key, out icon)) TryGetIcon("engine", out icon);
             if (icon != null) {
                 g.DrawImage(icon, 0, 0, 72, 72);
             }
@@ -1469,39 +1611,18 @@ class SCSMon {
     }
 
     static string RenderRadioBtn(Snap s) {
-        using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
-            g.Clear(Color.Black);
-            Image icon;
-            string key = radioOn ? "radio-c" : "radio";
-            if (!imgs.TryGetValue(key, out icon)) imgs.TryGetValue("radio", out icon);
-            if (icon != null) {
-                if (radioOn) {
-                    float alpha = PulseAlpha();
-                    var matrixCyan = new ColorMatrix(new float[][] {
-                        new float[]{0,0,0,0,0}, new float[]{0,alpha,0,0,0}, new float[]{0,0,alpha,0,0},
-                        new float[]{0,0,0,1,0}, new float[]{0,0,0,0,1} });
-                    using (var ia = new ImageAttributes()) {
-                        ia.SetColorMatrix(matrixCyan);
-                        g.DrawImage(icon, new Rectangle(0, 0, 72, 72), 0, 0, icon.Width, icon.Height, GraphicsUnit.Pixel, ia);
-                    }
-                    using (var cyan = new SolidBrush(Color.FromArgb((int)(alpha * 210), PulseCyan)))
-                        g.FillEllipse(cyan, 56, 4, 12, 12);
-                } else g.DrawImage(icon, 0, 0, 72, 72);
-            }
-            return B64(bmp);
-        }
+        return RenderPulseIcon("radio", "radio-c", radioOn);
     }
 
     static string RenderCheckEngine(Snap s) {
         // Mismo criterio que la app Windows: motor encendido y desgaste >= 5 %.
         bool checkEngineActive = s.active && s.engine && s.engineWear != null && s.engineWear.Value >= 5.0f;
         using (var bmp = NewBmp())
-        using (var g = Graphics.FromImage(bmp)) {
+        using (var g = NewGraphics(bmp)) {
             g.Clear(Color.Black);
             if (!checkEngineActive) return B64(bmp);
             
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             var sf = CenterSF;
             float alpha = PulseAlpha();
             using (var f1 = new Font("Arial", 11, FontStyle.Bold))
@@ -1517,7 +1638,7 @@ class SCSMon {
     static string RenderEngineRange(Snap s) {
         if (!s.active || !s.engine) {
             using (var bmp = NewBmp()) {
-                using (var g = Graphics.FromImage(bmp)) g.Clear(Color.Black);
+                using (var g = NewGraphics(bmp)) g.Clear(Color.Black);
                 return B64(bmp);
             }
         }
@@ -1528,7 +1649,7 @@ class SCSMon {
     static string RenderEngineGear(Snap s) {
         if (!s.active || !s.engine || s.gear == null) {
             using (var bmp = NewBmp()) {
-                using (var g = Graphics.FromImage(bmp)) g.Clear(Color.Black);
+                using (var g = NewGraphics(bmp)) g.Clear(Color.Black);
                 return B64(bmp);
             }
         }
@@ -1555,6 +1676,26 @@ class SCSMon {
             case "trailerattach": return RenderTrailerAttach(s);
             case "emergencybrake": return RenderParkingBrake(s);
             case "cruise": return RenderCruiseButton(s);
+            case "cruiseenc": return RenderCruiseButton(s);
+            case "retarderenc": return RenderPack("retarder", s.motorBrake);
+            case "volumeenc": return RenderPack("volume", false);
+            case "liftaxle": return RenderPack("liftaxle", false);
+            case "liftaxlet": return RenderPack("liftaxlet", false);
+            case "cruiseinc": return RenderPack("cruiseinc", false);
+            case "cruisedec": return RenderPack("cruisedec", false);
+
+            case "retarderauto": return RenderPack("retarderauto", false);
+            case "frontsuspup": return RenderPack("frontsuspup", false);
+            case "frontsuspdwn": return RenderPack("frontsuspdwn", false);
+            case "rearsuspup": return RenderPack("rearsuspup", false);
+            case "rearsuspdwn": return RenderPack("rearsuspdwn", false);
+            case "suspreset": return RenderPack("suspreset", false);
+            case "geardrive": return RenderPulseIcon("geardrive", "geardrive-c", s.gear != null && s.gear > 0);
+            case "gear0": return RenderPulseIcon("gearneutral", "gearneutral-c", s.gear != null && s.gear == 0);
+            case "gearreverse": return RenderPulseIcon("gearreverse", "gearreverse-c", s.gear != null && s.gear < 0);
+            case "camexterior": return RenderPulseIcon("camexterior", "camexterior-c", selectedCamera == "camexterior");
+            case "caminterior": return RenderPulseIcon("caminterior", "caminterior-c", selectedCamera == "caminterior");
+            case "camroof": return RenderPulseIcon("camroof", "camroof-c", selectedCamera == "camroof");
             case "hazbtn": return RenderHazBtn(s);
             case "blinkLbtn": return RenderPack("left", s.blinkL);
             case "blinkRbtn": return RenderPack("right", s.blinkR);
@@ -1594,16 +1735,13 @@ class SCSMon {
                 return RenderPack("low", false);
             case "lights": return RenderLights(s);
             default:
-                if (!s.active) return RenderBig("--", "SCS", colorName, "sin juego");
+                if (!s.active) return RenderNoGame(colorName);
                 switch (metric) {
                     case "speed": return RenderSpeed(s, colorName);
                     case "gear": return RenderBig(FmtGear(s.gear), "MARCHA", colorName, null);
                     case "rpm": return RenderRpm(s);
                     case "fuel": return RenderFuel(s);
-                    case "range": {
-                            string t = s.range != null ? Math.Round(s.range.Value).ToString() : "--";
-                            return RenderBig(t, "AUTONOMIA", colorName, "km");
-                        }
+                    case "range": return RenderRange(s, colorName);
                     case "cons": {
                             string t = s.cons != null ? Math.Round(s.cons.Value * 100, 1).ToString() : "--";
                             return RenderBig(t, "L/100KM", colorName, "consumo");
@@ -1624,7 +1762,7 @@ class SCSMon {
                             return RenderGauge("AIRE", s.airPressure, "PSI", warn, 0f, 150f, s.airWarn ?? 69.6f, true);
                         }
                     case "damage": return RenderDamage(s);
-                    case "route": return RenderRoute(s);
+                    case "route": return RenderRoute(s, colorName);
                     default: return RenderBig("--", "SCS", colorName, null);
                 }
         }
@@ -1633,6 +1771,14 @@ class SCSMon {
     // ---- websocket crudo ----
     class Ws {
         TcpClient cli; NetworkStream ns;
+        readonly object sendLock = new object();
+        // Buffers reutilizados bajo sendLock: evitan MemoryStream, la copia
+        // completa del frame y crear un RNG por cada setImage.
+        readonly RandomNumberGenerator sendRng = RandomNumberGenerator.Create();
+        readonly byte[] sendHeader = new byte[14];
+        readonly byte[] sendMask = new byte[4];
+        readonly byte[] sendChunk = new byte[8192];
+        byte[] sendText;
         public Ws(string host, int port) { cli = new TcpClient(host, port); ns = cli.GetStream(); }
         public void Handshake(string path) {
             byte[] rk = new byte[16];
@@ -1706,30 +1852,52 @@ class SCSMon {
             return Encoding.UTF8.GetString(pay);
         }
         public void SendRaw(int opcode, byte[] pay) {
-            if (pay == null) pay = new byte[0];
-            MemoryStream m = new MemoryStream();
-            m.WriteByte((byte)(0x80 | opcode));
-            byte[] mask = new byte[4];
-            using (var rng = RandomNumberGenerator.Create()) rng.GetBytes(mask);
-            long len = pay.Length;
-            if (len < 126) m.WriteByte((byte)(0x80 | len));
-            else if (len < 65536) { m.WriteByte(0x80 | 126); m.WriteByte((byte)(len >> 8)); m.WriteByte((byte)len); }
-            else { m.WriteByte((byte)(0x80 | 127)); for (int i = 7; i >= 0; i--) m.WriteByte((byte)((len >> (8 * i)) & 0xFF)); }
-            m.Write(mask, 0, 4);
-            byte[] mp = new byte[pay.Length];
-            for (long i = 0; i < pay.Length; i++) mp[i] = (byte)(pay[i] ^ mask[i % 4]);
-            m.Write(mp, 0, mp.Length);
-            byte[] all = m.ToArray();
-            ns.Write(all, 0, all.Length);
+            lock (sendLock) SendRawLocked(opcode, pay, pay == null ? 0 : pay.Length);
         }
-        public void Send(string text) { SendRaw(0x1, Encoding.UTF8.GetBytes(text)); }
+        void SendRawLocked(int opcode, byte[] pay, int count) {
+            // Cabecera + mascara en un solo buffer pequeno. El payload se
+            // enmascara por bloques sobre sendChunk: sin MemoryStream ni
+            // copia completa del frame por cada imagen.
+            int h = 0;
+            sendHeader[h++] = (byte)(0x80 | opcode);
+            long len = count;
+            if (len < 126) sendHeader[h++] = (byte)(0x80 | len);
+            else if (len < 65536) { sendHeader[h++] = (byte)(0x80 | 126); sendHeader[h++] = (byte)(len >> 8); sendHeader[h++] = (byte)len; }
+            else { sendHeader[h++] = (byte)(0x80 | 127); for (int i = 7; i >= 0; i--) sendHeader[h++] = (byte)((len >> (8 * i)) & 0xFF); }
+            sendRng.GetBytes(sendMask);
+            Buffer.BlockCopy(sendMask, 0, sendHeader, h, 4);
+            h += 4;
+            ns.Write(sendHeader, 0, h);
+            int off = 0;
+            while (off < count) {
+                int n = Math.Min(sendChunk.Length, count - off);
+                for (int i = 0; i < n; i++) sendChunk[i] = (byte)(pay[off + i] ^ sendMask[(off + i) & 3]);
+                ns.Write(sendChunk, 0, n);
+                off += n;
+            }
+        }
+        public void Send(string text) {
+            lock (sendLock) {
+                int max = Encoding.UTF8.GetMaxByteCount(text.Length);
+                if (sendText == null || sendText.Length < max) sendText = new byte[max];
+                int n = Encoding.UTF8.GetBytes(text, 0, text.Length, sendText, 0);
+                SendRawLocked(0x1, sendText, n);
+            }
+        }
         public void Close() { try { cli.Close(); } catch { } }
     }
 
     class Ctx {
         public string metric = "speed", theme = "green";
-        public double interval = 0.15;
+        public string device;
+        public int renderSize = 96;
+        public double interval = 0.05;
+        public long nextSend;
         public bool visible, titled;
+        public bool encoder, encInvert;
+        public int encStep = 1;
+        public long lastEncPress;
+        public string lastFeedback;
         public string last;
         public string lastKey;
     }
@@ -1746,36 +1914,133 @@ class SCSMon {
         var m = Regex.Match(json, "\"" + key + "\"\\s*:\\s*([0-9.\\-]+)");
         return m.Success ? m.Groups[1].Value : def;
     }
+    static bool SettingOn(string json, string key) {
+        var m = Regex.Match(json, "\"" + key + "\"\\s*:\\s*(true|1|\"1\"|\"true\")", RegexOptions.IgnoreCase);
+        return m.Success;
+    }
+    static string EncoderFeedback(string metric, Snap s) {
+        switch (metric) {
+            case "cruiseenc": {
+                    bool set = s.cruiseOn && s.cruise != null && s.cruise.Value > 0.5f;
+                    string value = set ? Kmh(s.cruise) + " km/h" : "OFF";
+                    int pct = 0;
+                    if (set) pct = (int)Math.Max(0, Math.Min(100, Math.Round(s.cruise.Value * 3.6)));
+                    return "{\"title\":\"CRUCERO\",\"value\":\"" + value + "\",\"indicator\":" + pct + "}";
+                }
+            case "retarderenc": {
+                    string value = s.active ? Kmh(s.speed) + " km/h" : "--";
+                    return "{\"title\":\"RETARDER\",\"value\":\"" + value + "\",\"indicator\":0}";
+                }
+            case "volumeenc":
+                return "{\"title\":\"VOLUMEN\",\"value\":\"SISTEMA\",\"indicator\":0}";
+        }
+        return null;
+    }
+    static void QueueEncoderKey(BlockingCollection<Action> q, ushort vk, int count) {
+        if (count <= 0) return;
+        q.Add(delegate {
+            for (int i = 0; i < count; i++) PressKey(vk, true);
+        });
+    }
+    static void QueueEncoderScan(BlockingCollection<Action> q, byte scan, bool ext, bool alt, bool ctrl, bool shift, int count) {
+        if (count <= 0) return;
+        q.Add(delegate {
+            for (int i = 0; i < count; i++) PressScanEx(scan, ext, alt, ctrl, shift, true);
+        });
+    }
+    static readonly HashSet<string> encWarned = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    static void HandleEncoderRotate(Ctx ctx, string message, BlockingCollection<Action> q) {
+        double rawTicks;
+        if (!double.TryParse(GetN(message, "ticks", "0"), NumberStyles.Float, CultureInfo.InvariantCulture, out rawTicks) || rawTicks == 0) return;
+        int ticks = (int)Math.Round(rawTicks);
+        if (ticks == 0) return;
+        if (ctx.encInvert) ticks = -ticks;
+        int count = (int)Math.Min(12, Math.Abs((long)ticks) * Math.Max(1, ctx.encStep));
+        if (ctx.metric == "volumeenc") {
+            QueueEncoderKey(q, ticks > 0 ? (ushort)0xAF : (ushort)0xAE, count);
+            return;
+        }
+        string action = null;
+        if (ctx.metric == "cruiseenc") action = ticks > 0 ? "cruiectrlinc" : "cruiectrldec";
+        else if (ctx.metric == "retarderenc") action = ticks > 0 ? "retarderup" : "retarderdown";
+        if (action == null) return;
+        WinBind wb = GetWinBind(action);
+        if (wb == null) {
+            if (encWarned.Add(action))
+                Log("encoder " + action + ": sin binding; asigna una tecla en el juego o reinicia con el juego cerrado para que el plugin la agregue");
+            return;
+        }
+        QueueEncoderScan(q, wb.Scan, wb.Ext, wb.Alt, wb.Ctrl, wb.Shift, count);
+    }
+    static void HandleEncoderPress(Ctx ctx, long now, BlockingCollection<Action> q) {
+        // Algunos hosts mandan keyDown+dialDown para la misma pulsacion.
+        if (now - ctx.lastEncPress < 250) return;
+        ctx.lastEncPress = now;
+        if (ctx.metric == "cruiseenc") {
+            Log("encoder crucero pulsado -> C");
+            q.Add(delegate { PressKey(0x43); });
+        } else if (ctx.metric == "retarderenc") {
+            Log("encoder retarder pulsado -> B (freno motor)");
+            q.Add(delegate { PressKey(0x42); });
+        } else if (ctx.metric == "volumeenc") {
+            Log("encoder volumen pulsado -> mute");
+            q.Add(delegate { PressKey(0xAD); });
+        }
+    }
 
     static long lastHighTick = 0;
     static int highWas = 0;
+    // P1.4: FlashWatch reutiliza el visor del bucle principal en lugar de
+    // abrir un segundo MMF. El sondeo se adapta al estado del juego.
+    static volatile System.IO.MemoryMappedFiles.MemoryMappedViewAccessor flashAcc;
+    static int flashMode = -1;
+    static void SetFlashMode(int mode, string text) {
+        if (flashMode == mode) return;
+        flashMode = mode;
+        Log("flashwatch: " + text);
+    }
     static void FlashWatch() {
+        int bad = 0;
         while (true) {
+            var acc = flashAcc;
+            if (acc == null) {
+                highWas = 0; bad = 0;
+                SetFlashMode(0, "sin MMF; espera 250 ms");
+                Thread.Sleep(250);
+                continue;
+            }
             try {
-                var mmf = System.IO.MemoryMappedFiles.MemoryMappedFile.OpenExisting("Local\\SCSTelemetry");
-                var acc = mmf.CreateViewAccessor(0, 32768, System.IO.MemoryMappedFiles.MemoryMappedFileAccess.Read);
-                int bad = 0;
-                while (true) {
-                    try {
-                        // No fiarse de bytes residuales: si el SDK no esta activo, el mapa
-                        // puede contener basura de la sesion anterior (falso "rafaga detectada" al arrancar).
-                        int sdk = acc.ReadByte(O_SDK);
-                        if (sdk == 0) { highWas = 0; bad = 0; Thread.Sleep(100); continue; }
-                        int v = acc.ReadByte(O_HI);
-                        if (v == 1) {
-                            System.Threading.Interlocked.Exchange(ref lastHighTick, DateTime.UtcNow.Ticks);
-                            if (highWas == 0) { highWas = 1; Log("rafaga detectada sdk=1 hi=1"); }
-                        } else {
-                            if (highWas == 1) Log("rafaga fin hi=0");
-                            highWas = 0;
-                        }
-                        bad = 0;
-                    } catch { if (++bad > 40) break; }
+                // No fiarse de bytes residuales: si el SDK no esta activo, el mapa
+                // puede contener basura de la sesion anterior (falso "rafaga detectada" al arrancar).
+                int sdk = acc.ReadByte(O_SDK);
+                if (sdk == 0) {
+                    highWas = 0; bad = 0;
+                    SetFlashMode(1, "sin juego; espera 250 ms");
+                    Thread.Sleep(250);
+                    continue;
+                }
+                int paused = acc.ReadByte(O_PAUSED);
+                int v = acc.ReadByte(O_HI);
+                if (v == 1) {
+                    System.Threading.Interlocked.Exchange(ref lastHighTick, DateTime.UtcNow.Ticks);
+                    if (highWas == 0) { highWas = 1; Log("rafaga detectada sdk=1 hi=1"); }
+                } else {
+                    if (highWas == 1) Log("rafaga fin hi=0");
+                    highWas = 0;
+                }
+                bad = 0;
+                // 15 ms solo con el juego activo; en pausa/menu baja a 100 ms.
+                if (paused != 0) {
+                    SetFlashMode(2, "pausa; sondeo 100 ms");
+                    Thread.Sleep(100);
+                } else {
+                    SetFlashMode(3, "activo; sondeo 15 ms");
                     Thread.Sleep(15);
                 }
-                try { acc.Dispose(); mmf.Dispose(); } catch { }
-            } catch { }
-            Thread.Sleep(1000);
+            } catch {
+                if (++bad > 20) { bad = 0; Thread.Sleep(500); }
+                else Thread.Sleep(50);
+            }
         }
     }
     static bool HighShown(Snap s) {
@@ -1785,7 +2050,7 @@ class SCSMon {
         return (DateTime.UtcNow.Ticks - t) < 1500 * 10000;
     }
     static int Main(string[] args) {
-        bool test = false, watchHigh = false, winInfo = false, winFix = false;
+        bool test = false, watchHigh = false, winInfo = false, winFix = false, renderDiag = false, verbose = false, noInput = false;
         int port = 0;
         string uuid = null, regEv = "registerPlugin";
         for (int i = 0; i < args.Length; i++) {
@@ -1793,22 +2058,29 @@ class SCSMon {
             else if (args[i] == "-WatchHigh" || args[i] == "--watch-high") watchHigh = true;
             else if (args[i] == "-WindowsInfo" || args[i] == "--windows-info") winInfo = true;
             else if (args[i] == "-WindowsFix" || args[i] == "--windows-fix") winFix = true;
+            else if (args[i] == "-RenderDiag" || args[i] == "--render-diag") renderDiag = true;
+            else if (args[i] == "-Verbose" || args[i] == "--verbose") verbose = true;
+            else if (args[i] == "-NoInput" || args[i] == "--no-input") noInput = true;
             else if (args[i] == "-port" && i + 1 < args.Length) port = int.Parse(args[++i]);
             else if (args[i] == "-pluginUUID" && i + 1 < args.Length) uuid = args[++i];
             else if (args[i] == "-registerEvent" && i + 1 < args.Length) regEv = args[++i];
         }
         plugDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
         logFile = Path.Combine(plugDir, "backend.log");
+        LoadSelectedCamera();
         if (winInfo || winFix) return RunWindowsDiag(winFix);
         if (watchHigh) return RunWatchHigh();
         if (test) return RunTest();
+        if (renderDiag) return RunRenderDiag();
         if (port <= 0 || uuid == null) return 1;
         Log("=== inicio ===");
         Preload();
         ResetWinBinds();
+#if !SECONDARY
         try { EnsureWindowBindings(true); } catch (Exception ex) { Log("ventanas: " + ex.Message); }
         try { var ft = new Thread(new ThreadStart(FlashWatch)); ft.IsBackground = true; ft.Start(); } catch (Exception ex) { Log("flashwatch: " + ex.Message); }
         try { var wt = new Thread(new ThreadStart(WindowBindingWatch)); wt.IsBackground = true; wt.Start(); } catch (Exception ex) { Log("ventanas-watch: " + ex.Message); }
+#endif
         Ws ws;
         try {
             ws = new Ws("127.0.0.1", port);
@@ -1817,35 +2089,74 @@ class SCSMon {
         try { ws.Send("{\"event\":\"" + regEv + "\",\"uuid\":\"" + uuid + "\"}"); }
         catch (Exception ex) { Log("MUERTE-registro: " + ex.Message); return 0; }
         Log("registrado");
+        var inbox = new ConcurrentQueue<string>();
+        var inboxSignal = new AutoResetEvent(false);
+        var receiver = new Thread(delegate() {
+            try {
+                while (true) {
+                    int op;
+                    string msg = ws.Recv(1000, out op);
+                    if (msg != null) {
+                        inbox.Enqueue(msg);
+                        inboxSignal.Set();
+                    }
+                }
+            } catch (Exception ex) {
+                if (!wsDead) Log("MUERTE-recv: " + ex.Message);
+                wsDead = true;
+                inboxSignal.Set();
+            }
+        });
+        receiver.IsBackground = true;
+        receiver.Name = "scsmon-recv";
+        receiver.Start();
+        var inputQueue = new BlockingCollection<Action>(new ConcurrentQueue<Action>());
+        var inputThread = new Thread(delegate() {
+            try {
+                foreach (var job in inputQueue.GetConsumingEnumerable()) {
+                    try {
+                        if (noInput) { if (verbose) Log("input-dry: job omitido"); }
+                        else job();
+                    }
+                    catch (Exception ex) { Log("input: " + ex.Message); }
+                }
+            } catch (Exception ex) { Log("input-hilo: " + ex.Message); }
+        });
+        inputThread.IsBackground = true;
+        inputThread.Name = "scsmon-input";
+        inputThread.Start();
         System.IO.MemoryMappedFiles.MemoryMappedFile telemetryMap = null;
         System.IO.MemoryMappedFiles.MemoryMappedViewAccessor acc = null;
         long nextMapRetry = 0;
         var ctxs = new Dictionary<string, Ctx>();
         var pressDownTimes = new Dictionary<string, long>();
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        while (true) {
-            long t0 = sw.ElapsedMilliseconds;
-            // drenar mensajes (50ms)
-            long deadline = t0 + 50;
-            while (sw.ElapsedMilliseconds < deadline) {
-                int left = (int)(deadline - sw.ElapsedMilliseconds);
-                int op;
-                string msg = null;
-                try { msg = ws.Recv(Math.Max(1, left), out op); }
-                catch (Exception ex) { Log("MUERTE-socket: " + ex.Message); return 0; }
-                if (msg == null) break;
-                Log("ev rx");
+        const int frameMs = 33;
+        while (!wsDead) {
+            long frameStart = sw.ElapsedMilliseconds;
+            // Procesar todos los eventos pendientes sin bloquear el muestreo.
+            string msg;
+            while (inbox.TryDequeue(out msg)) {
+                if (verbose) Log("ev rx");
                 string ev = GetS(msg, "event", ""), context = GetS(msg, "context", ""), action = GetS(msg, "action", "");
-                Log("ev " + ev);
+                if (verbose) Log("ev " + ev);
                 try {
                     if (ev == "willAppear") {
-                        Log("willAppear msg: " + msg);
+                        if (verbose) Log("willAppear msg: " + msg);
                         string[] parts = action.Split('.');
                         string b = parts.Length > 0 ? parts[parts.Length - 1] : "monitor";
                         if (b == "") b = "monitor";
-                        ctxs[context] = new Ctx { visible = true };
+                        string ctrl = GetS(msg, "controller", "");
+                        bool enc = string.Equals(ctrl, "Encoder", StringComparison.OrdinalIgnoreCase) ||
+                                   string.Equals(ctrl, "Knob", StringComparison.OrdinalIgnoreCase) ||
+                                   b.EndsWith("enc", StringComparison.OrdinalIgnoreCase);
+                        ctxs[context] = new Ctx { visible = true, encoder = enc };
                         // metrica fija por accion
                         ctxs[context].metric = b;
+                        string dev = GetS(msg, "device", null);
+                        ctxs[context].device = dev;
+                        int rs;
+                        if (dev != null && deviceSizes.TryGetValue(dev, out rs)) ctxs[context].renderSize = rs;
                         string th = GetS(msg, "metric", null);
                         // settings vienen en payload.settings; si accion generica usa metric de settings
                         var mset = Regex.Match(msg, "\"settings\"\\s*:\\s*\\{([^\\}]*)\\}");
@@ -1858,32 +2169,72 @@ class SCSMon {
                         if (b == "monitor" && m2 != null) ctxs[context].metric = m2;
                         if (th2 != null) ctxs[context].theme = th2;
                         if (iv2 != null) { double d; if (double.TryParse(iv2, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out d)) ctxs[context].interval = d; }
+                        if (enc && mset.Success) {
+                            ctxs[context].encInvert = SettingOn(mset.Groups[1].Value, "invert");
+                            int step;
+                            if (int.TryParse(GetN(mset.Groups[1].Value, "step", "1"), NumberStyles.Integer, CultureInfo.InvariantCulture, out step))
+                                ctxs[context].encStep = Math.Max(1, Math.Min(5, step));
+                        }
                     } else if (ev == "willDisappear") {
                         if (ctxs.Remove(context)) pressDownTimes.Remove(context);
+                    } else if (ev == "deviceDidConnect") {
+                        string dev = GetS(msg, "device", null);
+                        int size = ChooseRenderSize(msg);
+                        if (dev != null) {
+                            deviceSizes[dev] = size;
+                            foreach (var c in ctxs) {
+                                if (string.Equals(c.Value.device, dev, StringComparison.OrdinalIgnoreCase)) c.Value.renderSize = size;
+                            }
+                        }
+                        Log("device " + (dev ?? "(sin id)") + " -> render " + size + "px");
+                    } else if (ev == "dialRotate") {
+                        Ctx ec;
+                        if (context != "" && ctxs.TryGetValue(context, out ec) && ec.encoder)
+                            HandleEncoderRotate(ec, msg, inputQueue);
+                    } else if (ev == "dialDown" || ev == "dialPress" || ev == "touchTap") {
+                        Ctx ec;
+                        if (context != "" && ctxs.TryGetValue(context, out ec) && ec.encoder)
+                            HandleEncoderPress(ec, sw.ElapsedMilliseconds, inputQueue);
                     } else if (ev == "keyDown") {
                         if (context != "" && ctxs.ContainsKey(context)) {
                             pressDownTimes[context] = sw.ElapsedMilliseconds;
                             if (ctxs[context].metric == "windowleft" || ctxs[context].metric == "windowright") RefreshWindowBindings();
-                            if (ctxs[context].metric == "hazbtn") { Log("pulsado parqueo -> F"); PressKey(0x46); }
-                            else if (ctxs[context].metric == "blinkLbtn") { Log("pulsado izq -> scan 1A"); PressScan(0x1A); }
-                            else if (ctxs[context].metric == "blinkRbtn") { Log("pulsado der -> scan 1B"); PressScan(0x1B); }
-                            else if (ctxs[context].metric == "lightbtn") { Log("pulsado luces -> L"); PressKey(0x4C); }
-                            else if (ctxs[context].metric == "highbtn") { Log("pulsado largas -> K"); PressKey(0x4B); }
-                            else if (ctxs[context].metric == "beaconbtn") { Log("pulsado baliza -> O"); PressKey(0x4F); }
+                            if (ctxs[context].encoder) {
+                                HandleEncoderPress(ctxs[context], sw.ElapsedMilliseconds, inputQueue);
+                            }
+                            else if (ctxs[context].metric == "camexterior") { selectedCamera = "camexterior"; SaveSelectedCamera(); Log("camara exterior -> 2"); inputQueue.Add(delegate { PressKey(0x32); }); }
+                            else if (ctxs[context].metric == "caminterior") { selectedCamera = "caminterior"; SaveSelectedCamera(); Log("camara interior -> 1"); inputQueue.Add(delegate { PressKey(0x31); }); }
+                            else if (ctxs[context].metric == "camroof") { selectedCamera = "camroof"; SaveSelectedCamera(); Log("camara techo -> 4"); inputQueue.Add(delegate { PressKey(0x34); }); }
+                            else if (boundActions.Contains(ctxs[context].metric)) {
+                                string bm = ctxs[context].metric;
+                                WinBind wb = GetWinBind(bm);
+                                if (wb != null) {
+                                    Log("control " + bm + " -> " + wb.Key + (wb.Alt ? " +Alt" : "") + (wb.Ctrl ? " +Ctrl" : "") + (wb.Shift ? " +Shift" : ""));
+                                    inputQueue.Add(delegate { PressScanEx(wb.Scan, wb.Ext, wb.Alt, wb.Ctrl, wb.Shift); });
+                                } else {
+                                    Log("control " + bm + ": sin binding de teclado");
+                                }
+                            }
+                            else if (ctxs[context].metric == "hazbtn") { Log("pulsado parqueo -> F"); inputQueue.Add(delegate { PressKey(0x46); }); }
+                            else if (ctxs[context].metric == "blinkLbtn") { Log("pulsado izq -> scan 1A"); inputQueue.Add(delegate { PressScan(0x1A); }); }
+                            else if (ctxs[context].metric == "blinkRbtn") { Log("pulsado der -> scan 1B"); inputQueue.Add(delegate { PressScan(0x1B); }); }
+                            else if (ctxs[context].metric == "lightbtn") { Log("pulsado luces -> L"); inputQueue.Add(delegate { PressKey(0x4C); }); }
+                            else if (ctxs[context].metric == "highbtn") { Log("pulsado largas -> K"); inputQueue.Add(delegate { PressKey(0x4B); }); }
+                            else if (ctxs[context].metric == "beaconbtn") { Log("pulsado baliza -> O"); inputQueue.Add(delegate { PressKey(0x4F); }); }
                             else if (ctxs[context].metric == "wiperbtn") {
                                 wiperMode = (wiperMode + 1) % 4;
                                 Log("limpiaparabrisas modo=" + wiperMode + " -> P");
-                                PressKey(0x50);
+                                inputQueue.Add(delegate { PressKey(0x50); });
                             }
-                            else if (ctxs[context].metric == "difflock") { Log("pulsado diferencial -> V"); PressKey(0x56); }
-                            else if (ctxs[context].metric == "trailerattach") { Log("pulsado acople trailer -> T"); PressKey(0x54); }
-                            else if (ctxs[context].metric == "emergencybrake") { Log("pulsado freno estacionamiento -> Space"); PressKey(0x20); }
-                            else if (ctxs[context].metric == "cruise") { Log("pulsado crucero -> C"); PressKey(0x43); }
-                            else if (ctxs[context].metric == "enginebtn") { Log("pulsado encendido motor -> E"); PressKey(0x45); }
+                            else if (ctxs[context].metric == "difflock") { Log("pulsado diferencial -> V"); inputQueue.Add(delegate { PressKey(0x56); }); }
+                            else if (ctxs[context].metric == "trailerattach") { Log("pulsado acople trailer -> T"); inputQueue.Add(delegate { PressKey(0x54); }); }
+                            else if (ctxs[context].metric == "emergencybrake") { Log("pulsado freno estacionamiento -> Space"); inputQueue.Add(delegate { PressKey(0x20); }); }
+                            else if (ctxs[context].metric == "cruise") { Log("pulsado crucero -> C"); inputQueue.Add(delegate { PressKey(0x43); }); }
+                            else if (ctxs[context].metric == "enginebtn") { Log("pulsado encendido motor -> E"); inputQueue.Add(delegate { PressKey(0x45); }); }
                             else if (ctxs[context].metric == "radiobtn") { 
                                 radioOn = !radioOn;
                                 Log("pulsado radio -> R (estado: " + radioOn + ")"); 
-                                PressKey(0x52); 
+                                inputQueue.Add(delegate { PressKey(0x52); }); 
                             }
                         }
                     } else if (ev == "keyUp") {
@@ -1898,7 +2249,7 @@ class SCSMon {
                                 } else {
                                     Log("ventanilla izq " + (up ? "tap -> subir" : "hold -> bajar") + " (" + wb.Key + (wb.Alt ? " +Alt" : "") + ")");
                                     windowLeftOpen = !up;
-                                    PressScanHold(wb.Scan, wb.Ext, wb.Alt, wb.Ctrl, wb.Shift, 1400);
+                                    inputQueue.Add(delegate { PressScanHold(wb.Scan, wb.Ext, wb.Alt, wb.Ctrl, wb.Shift, 1400); });
                                 }
                             } else if (m == "windowright") {
                                 bool up = duration < 400;
@@ -1908,7 +2259,7 @@ class SCSMon {
                                 } else {
                                     Log("ventanilla der " + (up ? "tap -> subir" : "hold -> bajar") + " (" + wb.Key + (wb.Alt ? " +Alt" : "") + ")");
                                     windowRightOpen = !up;
-                                    PressScanHold(wb.Scan, wb.Ext, wb.Alt, wb.Ctrl, wb.Shift, 1400);
+                                    inputQueue.Add(delegate { PressScanHold(wb.Scan, wb.Ext, wb.Alt, wb.Ctrl, wb.Shift, 1400); });
                                 }
                             }
                         }
@@ -1922,6 +2273,14 @@ class SCSMon {
                                 if (ctxs[context].metric == "monitor" && m2 != null) ctxs[context].metric = m2;
                                 if (th2 != null) ctxs[context].theme = th2;
                                 if (iv2 != null) { double d; if (double.TryParse(iv2, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out d)) ctxs[context].interval = d; }
+                                if (ctxs[context].encoder) {
+                                    string settings = mset.Groups[1].Value;
+                                    ctxs[context].encInvert = SettingOn(settings, "invert");
+                                    int step;
+                                    if (int.TryParse(GetN(settings, "step", "1"), NumberStyles.Integer, CultureInfo.InvariantCulture, out step))
+                                        ctxs[context].encStep = Math.Max(1, Math.Min(5, step));
+                                    ctxs[context].lastFeedback = null;
+                                }
                             }
                         }
                     }
@@ -1932,30 +2291,53 @@ class SCSMon {
             try { s = GetSnap(acc); } catch { s = new Snap(); }
             if (!s.active) {
                 if (acc != null) {
+                    flashAcc = null;
                     try { acc.Dispose(); } catch { }
                     try { if (telemetryMap != null) telemetryMap.Dispose(); } catch { }
                     acc = null; telemetryMap = null;
                     Log("telemetria desconectada; aguardando juego");
                 }
                 if (sw.ElapsedMilliseconds >= nextMapRetry) {
-                    if (TryOpenTelemetry(out telemetryMap, out acc)) Log("mapa Local\\SCSTelemetry conectado");
+                    if (TryOpenTelemetry(out telemetryMap, out acc)) {
+                        flashAcc = acc;
+                        Log("mapa Local\\SCSTelemetry conectado");
+                    }
                     nextMapRetry = sw.ElapsedMilliseconds + 1000;
                 }
                 s = GetSnap(acc);
             }
             foreach (var kv in ctxs) {
                 if (!kv.Value.visible) continue;
+                if (kv.Value.encoder) {
+                    string fb = EncoderFeedback(kv.Value.metric, s);
+                    if (fb != null && fb != kv.Value.lastFeedback) {
+                        try { ws.Send("{\"event\":\"setFeedback\",\"context\":\"" + kv.Key + "\",\"payload\":" + fb + "}"); }
+                        catch (Exception ex) { Log("MUERTE-feedback: " + ex.Message); return 0; }
+                        kv.Value.lastFeedback = fb;
+                    }
+                    continue;
+                }
                 string th = kv.Value.theme;
                 if (!themes.ContainsKey(th)) th = "green";
-                string key = StateKey(kv.Value.metric, s, th);
+                int devSize;
+                if (kv.Value.device != null && deviceSizes.TryGetValue(kv.Value.device, out devSize)) kv.Value.renderSize = devSize;
+                string key = StateKey(kv.Value.metric, s, th) + "|" + kv.Value.renderSize;
                 string img;
                 if (key == kv.Value.lastKey && kv.Value.last != null) {
                     img = kv.Value.last;
                 } else {
+                    long now = sw.ElapsedMilliseconds;
+                    // El intervalo configurado se conserva como límite superior
+                    // de 33 ms: nunca baja de 30 Hz efectivos.
+                    double minInterval = Math.Min(kv.Value.interval, 0.033);
+                    long minMs = (long)Math.Max(0, minInterval * 1000);
+                    if (now < kv.Value.nextSend) continue;
+                    currentRenderSize = kv.Value.renderSize;
                     try {
                         img = RenderKey(kv.Value.metric, s, themes[th]);
                     } catch (Exception ex) { Log("render: " + ex.Message); continue; }
                     kv.Value.lastKey = key;
+                    kv.Value.nextSend = now + minMs;
                 }
                 if (img != kv.Value.last) {
                     try { ws.Send("{\"event\":\"setImage\",\"context\":\"" + kv.Key + "\",\"payload\":{\"image\":\"" + img + "\",\"target\":0}}"); }
@@ -1968,19 +2350,21 @@ class SCSMon {
                     kv.Value.titled = true;
                 }
             }
-            double wait = 2;
-            bool any = false;
-            foreach (var kv in ctxs) if (kv.Value.visible) { any = true; if (kv.Value.interval < wait) wait = kv.Value.interval; }
-            if (!any) wait = 2;
-            if (wait < 0.1) wait = 0.1;
-            long rest = (long)(wait * 1000 - (sw.ElapsedMilliseconds - t0));
-            if (rest > 0) Thread.Sleep((int)rest);
+            bool anyVisible = false;
+            foreach (var kv in ctxs) {
+                if (kv.Value.visible) { anyVisible = true; break; }
+            }
+            int rest = anyVisible ? frameMs - (int)(sw.ElapsedMilliseconds - frameStart) : 500;
+            if (rest > 0) inboxSignal.WaitOne(rest);
         }
+        flashAcc = null;
+        inputQueue.CompleteAdding();
+        return 0;
     }
 
     static int RunWindowsDiag(bool fix) {
         ResetWinBinds();
-        Console.WriteLine("Ventanas SCS - diagnostico");
+        Console.WriteLine("Controles SCS - diagnostico");
         Console.WriteLine("Juego en ejecucion: " + (IsGameRunning() ? "si" : "no"));
         List<string> files = FindControlsFiles();
         Console.WriteLine("Perfiles encontrados: " + files.Count);
@@ -1989,7 +2373,7 @@ class SCSMon {
             string text;
             try { text = File.ReadAllText(f, Encoding.UTF8); }
             catch (Exception ex) { Console.WriteLine("    ERROR " + ex.Message); continue; }
-            foreach (string a in winActions) {
+            foreach (string a in bindActions) {
                 string e = GetMixExpr(text, a);
                 Console.WriteLine("    " + a + ": " + (e == null ? "(falta)" : e));
             }
@@ -2003,7 +2387,7 @@ class SCSMon {
             active = FindActiveControlsForRunningGame();
             if (active != null) LoadWindowBindings(active, false);
         }
-        foreach (string a in winActions) {
+        foreach (string a in bindActions) {
             WinBind b = GetWinBind(a);
             Console.WriteLine("  " + a + " -> " + (b == null ? "SIN BINDING" : b.Key + (b.Alt ? " +Alt" : "") + (b.Ctrl ? " +Ctrl" : "") + (b.Shift ? " +Shift" : "")));
         }
@@ -2043,6 +2427,46 @@ class SCSMon {
         return 0;
     }
 
+    static int RunRenderDiag() {
+        Preload();
+        var s = new Snap();
+        s.active = true; s.engine = true; s.speed = 22.5f; s.rpm = 1500; s.rpmMax = 2500;
+        s.gear = 12; s.fuel = 300; s.fuelCap = 600; s.range = 800; s.cons = 0.28f;
+        s.cruise = 22.0f; s.cruiseOn = true; s.limit = 22.2f;
+        s.onJob = true; s.planned = 451; s.routeD = 350000; s.routeT = 2700;
+        s.truckDmg = 9; s.trailerDmg = 2; s.cargoDmg = 1;
+        s.waterTemp = 86; s.oilTemp = 91; s.airPressure = 132;
+        s.airWarn = 60; s.airEmergency = 30; s.waterWarn = 110;
+        s.engineWear = 6; s.lowB = true; s.trailerAttached = true; s.wipers = 1;
+
+        string[] metrics = new string[] {
+            "speed", "gear", "rpm", "fuel", "range", "cons", "cruise", "limit",
+            "watertemp", "oiltemp", "airpressure", "damage", "route",
+            "lights", "hazbtn", "blinkLbtn", "lightbtn",
+            "windowleft", "windowright",
+            "cruiseenc", "retarderenc", "volumeenc",
+            "liftaxle", "liftaxlet", "cruiseinc", "cruisedec",
+            "retarderauto", "frontsuspup", "frontsuspdwn", "rearsuspup",
+            "rearsuspdwn", "suspreset",
+            "camexterior", "caminterior", "camroof",
+            "geardrive", "gear0", "gearreverse"
+        };
+
+        foreach (int size in new int[] { 72, 96, 144 }) {
+            currentRenderSize = size;
+            string dir = Path.Combine(Path.GetTempPath(), "scsmon-render-" + size);
+            Directory.CreateDirectory(dir);
+            foreach (string metric in metrics) {
+                string img = RenderKey(metric, s, "Lime");
+                File.WriteAllBytes(Path.Combine(dir, metric + ".png"),
+                    Convert.FromBase64String(img.Substring(22)));
+            }
+            Console.WriteLine("Render " + size + "px: " + dir);
+        }
+        currentRenderSize = 72;
+        return 0;
+    }
+
     static int RunTest() {
         Preload();
         System.IO.MemoryMappedFiles.MemoryMappedViewAccessor acc = null;
@@ -2058,7 +2482,7 @@ class SCSMon {
         Console.WriteLine("Fuel: " + s.fuel + " L | Rango: " + s.range + " km | Danos: " + s.truckDmg + "/" + s.trailerDmg + "/" + s.cargoDmg + " | Desgaste motor: " + s.engineWear + " %");
         string dir = Path.Combine(Path.GetTempPath(), "scsmon-test");
         Directory.CreateDirectory(dir);
-        foreach (var m in new string[] { "speed", "gear", "rpm", "fuel", "range", "cons", "cruise", "cruiseSpeed", "limit", "watertemp", "oiltemp", "airpressure", "blinkL", "blinkR", "hazard", "lowB", "highB", "brake", "park", "lights", "auto", "turn", "beams", "damage", "route", "hazbtn", "blinkLbtn", "blinkRbtn", "lightbtn", "highbtn", "beaconbtn", "wiperbtn", "difflock", "emergencybrake", "engine", "enginebtn", "checkengine", "enginerange", "enginegear", "trailerattach", "windowleft", "windowright", "radiobtn" }) {
+        foreach (var m in new string[] { "speed", "gear", "rpm", "fuel", "range", "cons", "cruise", "cruiseSpeed", "limit", "watertemp", "oiltemp", "airpressure", "blinkL", "blinkR", "hazard", "lowB", "highB", "brake", "lights", "auto", "turn", "beams", "damage", "route", "hazbtn", "blinkLbtn", "blinkRbtn", "lightbtn", "highbtn", "beaconbtn", "wiperbtn", "difflock", "emergencybrake", "enginebtn", "trailerattach", "windowleft", "windowright", "radiobtn", "cruiseenc", "retarderenc", "volumeenc", "liftaxle", "liftaxlet", "cruiseinc", "cruisedec", "retarderauto", "frontsuspup", "frontsuspdwn", "rearsuspup", "rearsuspdwn", "suspreset", "camexterior", "caminterior", "camroof", "geardrive", "gear0", "gearreverse" }) {
             string img = RenderKey(m, s, "Lime");
             File.WriteAllBytes(Path.Combine(dir, m + ".png"), Convert.FromBase64String(img.Substring(22)));
         }
