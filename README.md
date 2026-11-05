@@ -15,12 +15,6 @@ estacionarias, baliza, limpiaparabrisas, diferencial, freno, crucero).
 
 ![Teclas del tablero](docs/img/tiles-muestra.png)
 
-## Capturas de la app Ajazz StreamDock
-
-![Ajazz StreamDock 1](docs/img/ajazz-app-1.png)
-![Ajazz StreamDock 2](docs/img/ajazz-app-2.png)
-![Ajazz StreamDock 3](docs/img/ajazz-app-3.png)
-
 ## Caracteristicas
 
 **Windows 1.3.2** define 34 acciones (se eliminan 5 testigos redundantes y se
