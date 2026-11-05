@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/img/logo.png" alt="Trucker Simulator para Ajazz StreamDock" width="480">
+</p>
+
 # Trucker Simulator para Ajazz StreamDock
 
 Plugin **Trucker Simulator** (`com.hsgaming.scsmon`): telemetria en vivo de
@@ -10,6 +14,12 @@ tablero, mas botones que actuan sobre el juego (luces, intermitentes,
 estacionarias, baliza, limpiaparabrisas, diferencial, freno, crucero).
 
 ![Teclas del tablero](docs/img/tiles-muestra.png)
+
+## Capturas de la app Ajazz StreamDock
+
+![Ajazz StreamDock 1](docs/img/ajazz-app-1.png)
+![Ajazz StreamDock 2](docs/img/ajazz-app-2.png)
+![Ajazz StreamDock 3](docs/img/ajazz-app-3.png)
 
 ## Caracteristicas
 

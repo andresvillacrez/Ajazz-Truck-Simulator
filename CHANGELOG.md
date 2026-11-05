@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [1.3.1] - 2026-11-05
+
+### Presentacion
+- Logo del proyecto como encabezado del repositorio (README).
+- Capturas de la app Ajazz StreamDock con el plugin en accion (`docs/img/`).
+
 ## [1.3.0] - 2026-11-04
 
 ### Acciones
