@@ -3,7 +3,7 @@
 ; Mantener AppVersion sincronizada con manifest.json y CHANGELOG.md.
 
 #define MyAppName "Trucker Simulator para Ajazz StreamDock"
-#define MyAppVersion "1.3.1"
+#define MyAppVersion "1.3.2"
 #define MyAppPublisher "HS-Gaming"
 #define PluginId "com.hsgaming.scsmon.sdPlugin"
 

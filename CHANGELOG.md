@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [1.3.2] - 2026-11-05
+
+### Correccion
+- Texto "Trucker Simulator" en tiles sin juego ahora se muestra en dos lineas (Trucker / Simulator) para evitar desbordamiento.
+
+
 ## [1.3.1] - 2026-11-05
 
 ### Presentacion

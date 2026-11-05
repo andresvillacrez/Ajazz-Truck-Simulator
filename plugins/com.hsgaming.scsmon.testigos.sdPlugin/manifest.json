@@ -200,7 +200,7 @@
   "Description": "Testigos de telemetria ATS/ETS2 para Ajazz/StreamDock",
   "Icon": "icon",
   "Name": "Trucker Simulator Testigos",
-  "Version": "1.3.1",
+  "Version": "1.3.2",
   "SDKVersion": 2,
   "OS": [
     {

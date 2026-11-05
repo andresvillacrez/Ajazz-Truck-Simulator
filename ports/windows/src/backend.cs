@@ -1053,8 +1053,9 @@ class SCSMon {
             using (var f3 = new Font("Arial", 7))
             using (var br = new SolidBrush(col)) {
                 g.DrawString("--", f1, br, 36, 4, sf);
-                g.DrawString("Trucker Simulator", f2, Brushes.White, 36, 28, sf);
-                g.DrawString("sin juego", f3, Brushes.Gray, 36, 46, sf);
+                g.DrawString("Trucker", f2, Brushes.White, 36, 26, sf);
+                g.DrawString("Simulator", f2, Brushes.White, 36, 36, sf);
+                g.DrawString("sin juego", f3, Brushes.Gray, 36, 50, sf);
             }
             return B64(bmp);
         }
