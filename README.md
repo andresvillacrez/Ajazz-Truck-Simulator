@@ -154,7 +154,7 @@ el paquete beta.
 La matriz de ports y la auditorÃ­a de mejoras estÃ¡n en
 [`ports/README.md`](ports/README.md) y [`ports/MEJORAS.md`](ports/MEJORAS.md).
 
-## Estado de desarrollo (2026-11-04)
+## Estado de desarrollo (2026-11-05)
 
 > Bitacora interna para no perder contexto entre sesiones. Actualizar esta
 > seccion al cerrar cada bloque de trabajo.
@@ -234,25 +234,16 @@ La matriz de ports y la auditorÃ­a de mejoras estÃ¡n en
 - Docs actualizados: `README.md`, `CHANGELOG.md`, `HISTORIAL.md` y
   `docs/INSTALACION.md` (ventanillas automaticas, sin asignacion manual).
 
-### Situacion del arbol
+### Situacion del arbol (actualizada 2026-11-05)
 
-- Ultimo commit: `c6e20ff` (v1.1 local, 2026-10-29). Release publica v1.0:
-  `363f498` (2026-10-14).
-- `manifest.json` esta en **1.3.0** con **34 acciones** (27 Keypad + 11 nuevos + 3 Encoder);
-  la v1.0 publicada tenia 21. El instalador Windows 1.2 queda pendiente de
-  regenerar con Inno Setup; el plugin 1.2 ya esta compilado y desplegado.
-- Backend macOS `backend` y `backend.swift` estan versionados. El binario es
-  x86_64 y cubre **21 acciones**; el paquete macOS se distribuye como
-  `1.0-beta` hasta completar el port.
-- **Sin seguimiento**: `fps/` y `plugins/com.hsgaming.vitals.sdPlugin/`
-  (plugin de sensores del Mac, ajeno al plugin principal).
-- `backend.exe` del repo y el instalado en
-  `%APPDATA%\HotSpot\StreamDock\plugins\com.hsgaming.scsmon.sdPlugin\` son
-  identicos (SHA256 `539395801EE230AD9D63F83F0C04DF251FAEB4E496EA248F0E5F1F0EE3344657`,
-  build 1.2 con ventanillas, encoders, WebSocket, FlashWatch y tiles mejorados).
-- Documentacion: `CHANGELOG.md` describe la 1.1 y `docs/INSTALACION.md` cubre
-  Windows y macOS. El arbol de trabajo puede tener cambios locales ajenos a
-  esta release (por ejemplo `automatizacion/Modo_Gaming_SCS.bat` eliminado).
+- Ultimo commit: `61bfb47` (v1.3.2, 2026-11-05). Release publica: v1.3.2 en GitHub.
+- `manifest.json` (principal): **1.3.2**, 34 acciones. Plugin Testigos: **1.3.2**, 12 acciones.
+- Instalador Windows: `TruckerSim-Ajazz-Setup-1.3.2.exe` (subido a GitHub Releases).
+- Backend macOS: x86_64, 21 acciones, paquete `1.0-beta`.
+- Linux/OpenDeck: experimental, 32 acciones.
+- **Sin seguimiento**: `fps/` y `plugins/com.hsgaming.vitals.sdPlugin/` (ajenos al plugin principal).
+- `backend.exe` desplegado en `%APPDATA%\HotSpot\StreamDock\plugins\com.hsgaming.scsmon.sdPlugin\` (v1.3.2, con fix de texto "Trucker Simulator" en dos lineas en tiles sin juego).
+- Documentacion: `CHANGELOG.md` describe hasta 1.3.2; `docs/INSTALACION.md` cubre Windows y macOS.
 
 ### Acciones locales nuevas (11)
 
